@@ -4,8 +4,8 @@ import { STRINGS, TOUR, aboutHtml } from './texts.js';
 
 const TOPIC_COLORS = ['#2f6fd0', '#35b58a', '#b8336a', '#f2c94c'];   // physical, life, health, social (validated for colour-vision deficiencies)
 const NO_TOPIC = '#7d8aa5';
-const BG = new THREE.Color('#0b1530');
-const EDGE_BASE = new THREE.Color('#3f7fca'), EDGE_ON = new THREE.Color('#d6efff');
+const BG = new THREE.Color('#000000');
+const EDGE_BASE = new THREE.Color('#7e60e2'), EDGE_ON = new THREE.Color('#ffffff');
 const SEG = 10;                 // cylinder pieces per line, so lines can arch in the city view
 const IDLE_MS = (+new URLSearchParams(location.search).get('idle') || 90) * 1000;   // ?idle=30 sets the seconds until the exhibit resets itself
 const HOME = { net: { pos: [0, 30, 172], target: [0, 0, 0] }, city: { pos: [0, 100, 150], target: [0, 0, 8] } };
@@ -62,7 +62,7 @@ edgeMesh.renderOrder = 2;   // after the ghost spheres
 scene.add(edgeMesh);
 
 const stalks = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(nodes.length * 6), 3)),
-  new THREE.LineBasicMaterial({ color: 0x8fa3c8, transparent: true, opacity: 0, depthWrite: false }));
+  new THREE.LineBasicMaterial({ color: 0xbdbdbd, transparent: true, opacity: 0, depthWrite: false }));
 stalks.frustumCulled = false;
 scene.add(stalks);
 
@@ -81,7 +81,7 @@ function buildMap() {
     g.rotateX(-Math.PI / 2);
     const m = new THREE.Mesh(g, material); m.position.y = y; group.add(m);
   };
-  const land = mat('#16285a', 0.85), border = mat('#5d77b0', 0.9, THREE.LineBasicMaterial), water = mat('#2a86c8', 0.9);
+  const land = mat('#1c1830', 0.9), border = mat('#7e60e2', 0.75, THREE.LineBasicMaterial), water = mat('#2a86c8', 0.9);
   for (const d of wien.districts) {
     flat(d.ring, land, 0);
     group.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(d.ring.map(([x, z]) => new THREE.Vector3(x, 0.05, z))), border));
@@ -423,6 +423,7 @@ function frame(now) {
   resetIfIdle(now);
 }
 
+document.fonts.ready.then(() => labels.forEach(l => { l.w = 0; }));   // label widths were measured in the fallback font
 resize();
 placeNodes();
 paint();
