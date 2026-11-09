@@ -17,7 +17,7 @@
 }
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
-body { background: var(--bg); color: var(--ink); font: 18px/1.4 var(--font); letter-spacing: .01em; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+body { background: var(--bg); color: var(--ink); font: 18px/1.4 var(--font); letter-spacing: .01em; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 h1, h2, h3, p, ul, ol { margin: 0; padding: 0; }
 ul, ol { list-style: none; }
 button { font: inherit; color: inherit; }
@@ -30,7 +30,7 @@ button { font: inherit; color: inherit; }
 .lbl.strong { font-size: 18px; font-weight: 600; }
 .lbl.district { font-size: 13px; font-weight: 400; color: var(--ink-2); }
 
-.top { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: max(16px, env(safe-area-inset-top)) var(--edge) 0; pointer-events: none; }
+.top { position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(#000 35%, transparent); padding-bottom: 28px !important; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: max(16px, env(safe-area-inset-top)) var(--edge) 0; pointer-events: none; }
 .top > * { pointer-events: auto; }
 .title { max-width: 840px; display: flex; align-items: flex-start; gap: 18px; }
 .mark { height: clamp(40px, 4.2vw, 56px); width: auto; flex-shrink: 0; margin-top: 2px; }
@@ -52,9 +52,12 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.05; font-weight: 600; l
 .legend li, .legend p { display: flex; align-items: center; gap: 9px; }
 .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
 .key-ball { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink-2); flex-shrink: 0; }
-.key-line { width: 14px; height: 3px; border-radius: 2px; background: var(--accent-soft); flex-shrink: 0; }
+.key-line { width: 14px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--phys), var(--health)); flex-shrink: 0; }
+.key-ring { width: 14px; height: 8px; border-radius: 50%; border: 2px solid var(--ink-2); flex-shrink: 0; }
 .legend p:first-of-type { margin-top: 6px; }
+.legend p { margin-top: -1px; }
 
+.short { display: none; }
 .dock { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(16px, env(safe-area-inset-bottom)); display: flex; gap: 10px; }
 
 .panel { position: fixed; top: 104px; right: var(--edge); bottom: max(16px, env(safe-area-inset-bottom)); width: min(380px, calc(100vw - 32px)); background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px 22px 26px; overflow-y: auto; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); user-select: text; -webkit-user-select: text; }
@@ -81,39 +84,71 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.05; font-weight: 600; l
 .row:hover { background: rgba(126, 96, 226, .35); }
 .row .n { font-weight: 600; font-variant-numeric: tabular-nums; }
 
-.tour { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(16px, env(safe-area-inset-bottom)); width: min(620px, calc(100vw - 32px)); background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px 24px 18px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.tour { display: flex; flex-direction: column; position: fixed; left: 50%; transform: translateX(-50%); bottom: max(16px, env(safe-area-inset-bottom)); width: min(620px, calc(100vw - 32px)); background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px 24px 18px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .tour-step { font-size: 14px; font-weight: 500; color: var(--accent-soft); text-transform: uppercase; letter-spacing: .1em; }
 .tour h2 { font-size: 30px; line-height: 1.1; font-weight: 600; margin: 4px 0 8px; }
-.tour #tourBody { font-size: 19px; }
+.tour #tourBody { font-size: 19px; overflow-y: auto; min-height: 0; }
 .tour #tourBody p + p, .tour #tourBody ul { margin-top: 8px; }
 .tour #tourBody li { display: flex; align-items: center; gap: 10px; }
-.tour-nav { display: flex; gap: 10px; margin-top: 16px; }
+.tour-nav { display: flex; gap: 10px; margin-top: 16px; flex-shrink: 0; }
 .tour-nav .quiet { margin-left: auto; }
 
-dialog { max-width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: #0e0e0e; color: var(--ink); border: 1px solid var(--line); border-radius: 18px; padding: 26px 28px 22px; user-select: text; -webkit-user-select: text; }
+dialog { max-width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: #0e0e0e; color: var(--ink); border: 1px solid var(--line); border-radius: 18px; padding: 26px 28px 0; user-select: text; -webkit-user-select: text; }
 dialog::backdrop { background: rgba(0, 0, 0, .75); }
 dialog h2 { font-size: 30px; font-weight: 600; margin-bottom: 10px; }
 dialog h3 { font-size: 18px; font-weight: 600; margin: 18px 0 4px; }
 dialog p, dialog li { font-size: 17px; color: var(--ink-2); }
 dialog ul { list-style: disc; padding-left: 20px; }
 dialog a { color: var(--accent-soft); }
-dialog form { margin-top: 20px; text-align: right; }
+dialog form { position: sticky; bottom: 0; margin-top: 12px; padding: 12px 0 18px; text-align: right; background: linear-gradient(transparent, #0e0e0e 30%); }
 .fallback { position: fixed; inset: 0; display: grid; place-items: center; padding: 32px; text-align: center; }
 .fallback[hidden] { display: none; }
 
-@media (max-width: 900px) {
+/* Phone held upright: cards rise from the bottom edge, the bottom row shrinks to one line. */
+@media (max-width: 900px) and (orientation: portrait) {
   body { font-size: 17px; }
   .top { flex-direction: column; gap: 10px; }
-  .title { max-width: none; }
+  .title { max-width: none; gap: 12px; }
+  h1 { font-size: clamp(22px, 6.4vw, 34px); }
+  .mark { height: 34px; }
   #subtitle { display: none; }
-  .legend { font-size: 13px; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 118px); }
-  .dock { left: var(--edge); right: var(--edge); transform: none; justify-content: center; flex-wrap: wrap; }
-  .dock .btn { padding: 0 14px; }
-  .panel { top: auto; left: 8px; right: 8px; bottom: 0; width: auto; max-height: 52vh; border-radius: 18px 18px 0 0; padding-bottom: max(22px, env(safe-area-inset-bottom)); }
-  .hero b { font-size: 40px; }
-  .tour { padding: 16px 18px 14px; }
-  .tour h2 { font-size: 22px; }
+  .long { display: none; }
+  .short { display: inline; }
+  .legend { font-size: 13px; left: var(--edge); right: var(--edge); bottom: calc(max(14px, env(safe-area-inset-bottom)) + 62px); }
+  .legend ul { display: grid; grid-template-columns: auto auto; justify-content: center; gap: 4px 18px; }
+  .legend p { display: none; }
+  .dock { left: var(--edge); right: var(--edge); bottom: max(14px, env(safe-area-inset-bottom)); transform: none; justify-content: center; gap: 8px; }
+  .dock .btn { padding: 0 16px; }
+  .panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 50vh; max-height: 50dvh; border-radius: 20px 20px 0 0; border-width: 1px 0 0; padding: 18px 18px max(22px, env(safe-area-inset-bottom)); }
+  .panel h2 { font-size: 24px; }
+  .hero { margin-top: 14px; }
+  .hero b { font-size: 44px; }
+  .tour { width: auto; left: 0; right: 0; bottom: 0; transform: none; max-height: 62vh; max-height: 62dvh; border-radius: 20px 20px 0 0; border-width: 1px 0 0; padding: 16px 18px max(14px, env(safe-area-inset-bottom)); }
+  .tour h2 { font-size: 23px; }
   .tour #tourBody { font-size: 17px; }
+  dialog { padding: 20px 20px 0; max-height: calc(100dvh - 24px); }
   body.busy .legend, body.busy .dock { display: none; }
+}
+/* Phone on its side: too little height for a bottom card, so cards take the right edge. */
+@media (max-height: 520px) and (orientation: landscape) {
+  body { font-size: 16px; }
+  .top { padding-top: max(10px, env(safe-area-inset-top)); }
+  h1 { font-size: 22px; }
+  .mark { height: 30px; }
+  #subtitle { display: none; }
+  .seg button { min-height: 34px; }
+  .btn { min-height: 42px; }
+  .legend { font-size: 13px; bottom: max(10px, env(safe-area-inset-bottom)); }
+  .legend p { display: none; }
+  .dock { bottom: max(10px, env(safe-area-inset-bottom)); }
+  .panel, .tour { top: 8px; bottom: 8px; left: auto; right: max(8px, env(safe-area-inset-right)); transform: none; width: min(360px, 46vw); padding: 14px 16px 16px; z-index: 2; }
+  .panel { overflow-y: auto; }
+  .panel h2, .tour h2 { font-size: 21px; }
+  .hero { margin-top: 10px; }
+  .hero b { font-size: 38px; }
+  .panel h3 { margin-top: 16px; }
+  .tour #tourBody { font-size: 16px; }
+  .tour-nav { flex-wrap: wrap; }
+  body.busy .dock, body.busy .controls, body.busy .legend { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .lbl { transition: none; } }

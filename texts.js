@@ -6,8 +6,8 @@ export const STRINGS = {
     title: 'Wer forscht mit wem in Wien?',
     subtitle: '{places} Forschungsorte, {pairs} Verbindungen. Dreh das Netz und tippe auf eine Kugel.',
     viewLabel: 'Ansicht', viewNet: 'Netz', viewCity: 'Stadtplan', langLabel: 'Sprache wechseln', legendLabel: 'Legende',
-    keyBall: 'Größe: Zahl der Veröffentlichungen', keyLine: 'Linie: gemeinsam veröffentlicht',
-    tourStart: 'So liest du das Netz', listOpen: 'Alle Orte', aboutOpen: 'Über das Netz',
+    keyBall: 'Größe: Zahl der Veröffentlichungen', keyLine: 'Linie: gemeinsam veröffentlicht', keyRing: 'Ring: ohne Wiener Partner veröffentlicht',
+    tourStart: 'So liest du das Netz', listOpen: 'Alle Orte', listShort: 'Orte', aboutOpen: 'Über das Netz', aboutShort: 'Info',
     back: 'Zurück', next: 'Weiter', tourDone: 'Selbst erkunden', tourClose: 'Beenden', close: 'Schließen', step: 'Schritt {i} von {n}',
     topics: ['Technik, Physik & Mathematik', 'Lebewesen & Natur', 'Gesundheit & Medizin', 'Mensch & Gesellschaft'],
     kind: { uni: 'Universität', inst: 'Forschungsinstitut', klinik: 'Krankenhaus', museum: 'Museum', fh: 'Hochschule', amt: 'Öffentliche Forschungsstelle' },
@@ -15,6 +15,7 @@ export const STRINGS = {
     heroUnit: 'Veröffentlichungen seit {since}',
     togetherTitle: 'Allein oder gemeinsam?',
     togetherNote: '{n} davon ({pct} %) sind gemeinsam mit einem anderen Wiener Forschungsort entstanden.',
+    ringNote: 'Der Ring um die Kugel steht für die anderen {n}.',
     topicsTitle: 'Woran wird hier geforscht?',
     partnersTitle: 'Forscht am häufigsten gemeinsam mit',
     partnersNote: 'Die Zahl zeigt die gemeinsamen Veröffentlichungen. Insgesamt hat dieser Ort {n} Partner im Netz.',
@@ -26,8 +27,8 @@ export const STRINGS = {
     title: 'Who does research with whom in Vienna?',
     subtitle: '{places} research places, {pairs} connections. Spin the network and tap a sphere.',
     viewLabel: 'View', viewNet: 'Network', viewCity: 'City map', langLabel: 'Switch language', legendLabel: 'Legend',
-    keyBall: 'Size: number of publications', keyLine: 'Line: published together',
-    tourStart: 'How to read the network', listOpen: 'All places', aboutOpen: 'About',
+    keyBall: 'Size: number of publications', keyLine: 'Line: published together', keyRing: 'Ring: published without a Vienna partner',
+    tourStart: 'How to read the network', listOpen: 'All places', listShort: 'Places', aboutOpen: 'About', aboutShort: 'Info',
     back: 'Back', next: 'Next', tourDone: 'Explore yourself', tourClose: 'End', close: 'Close', step: 'Step {i} of {n}',
     topics: ['Technology, physics & maths', 'Living things & nature', 'Health & medicine', 'People & society'],
     kind: { uni: 'University', inst: 'Research institute', klinik: 'Hospital', museum: 'Museum', fh: 'College', amt: 'Public research agency' },
@@ -35,6 +36,7 @@ export const STRINGS = {
     heroUnit: 'publications since {since}',
     togetherTitle: 'Alone or together?',
     togetherNote: '{n} of them ({pct} %) were written together with another research place in Vienna.',
+    ringNote: 'The ring around the sphere stands for the other {n}.',
     topicsTitle: 'What do they research here?',
     partnersTitle: 'Publishes most often with',
     partnersNote: 'The number counts joint publications. This place has {n} partners in the network.',
@@ -52,8 +54,8 @@ export const TOUR = [
     de: { title: 'Große Kugel, viele Veröffentlichungen', body: ['Wer etwas Neues herausfindet, schreibt es auf, damit andere es nachlesen und überprüfen können. Das nennt man eine Veröffentlichung.', 'Je mehr Veröffentlichungen ein Ort seit {since} hat, desto größer ist seine Kugel. Die größte gehört zu „{big}“: {bigCount}.'] },
     en: { title: 'Big sphere, many publications', body: ['When researchers find out something new, they write it down so that others can read and check it. That is called a publication.', 'The more publications a place has had since {since}, the bigger its sphere. The biggest one belongs to “{big}”: {bigCount}.'] } },
   { show: 'pair',
-    de: { title: 'Eine Linie heißt: gemeinsam geforscht', body: ['Forschung ist Teamarbeit. Eine Linie verbindet zwei Orte, wenn Menschen von beiden zusammen etwas veröffentlicht haben. Je dicker und heller die Linie, desto öfter.', 'Die dickste Linie verbindet „{pairA}“ und „{pairB}“: {pairCount} gemeinsame Veröffentlichungen.'] },
-    en: { title: 'A line means: researched together', body: ['Research is teamwork. A line joins two places when people from both have published something together. The thicker and brighter the line, the more often.', 'The thickest line joins “{pairA}” and “{pairB}”: {pairCount} joint publications.'] } },
+    de: { title: 'Eine Linie heißt: gemeinsam geforscht', body: ['Forschung ist Teamarbeit. Eine Linie verbindet zwei Orte, wenn Menschen von beiden zusammen etwas veröffentlicht haben. Je dicker und heller die Linie, desto öfter. Der Ring um eine Kugel steht für alles, was ein Ort ohne Wiener Partner veröffentlicht hat.', 'Die dickste Linie verbindet „{pairA}“ und „{pairB}“: {pairCount} gemeinsame Veröffentlichungen.'] },
+    en: { title: 'A line means: researched together', body: ['Research is teamwork. A line joins two places when people from both have published something together. The thicker and brighter the line, the more often. The ring around a sphere stands for everything a place has published without a partner in Vienna.', 'The thickest line joins “{pairA}” and “{pairB}”: {pairCount} joint publications.'] } },
   { show: 'topics',
     de: { title: 'Die Farbe zeigt das Thema', body: ['Jede Kugel hat die Farbe des Themas, zu dem dort am meisten veröffentlicht wird. Viele Orte forschen aber an mehreren Themen. Tippe später auf eine Kugel, dann siehst du die ganze Mischung.'] },
     en: { title: 'Colour shows the topic', body: ['Each sphere has the colour of the topic it publishes on most. Many places work on several topics, though. Tap a sphere later to see the whole mix.'] } },
@@ -75,6 +77,8 @@ export function aboutHtml(lang, f) {
     <h3>Die Regeln</h3>
     <ul><li>Eine Linie zählt nur, wenn zwei verschiedene Menschen an den beiden Orten arbeiten. Eine Person mit zwei Arbeitgebern ist keine Zusammenarbeit.</li>
     <li>Das Volumen einer Kugel wächst mit der Zahl der Veröffentlichungen, die Dicke einer Linie mit der Zahl der gemeinsamen.</li>
+    <li>Der Ring um eine Kugel zeigt nach demselben Maßstab, wie viel ein Ort ohne anderen Wiener Forschungsort veröffentlicht hat. Partner außerhalb Wiens können trotzdem beteiligt sein.</li>
+    <li>Jede Linie verläuft von der Farbe des einen Orts zur Farbe des anderen. Die wandernden Lichtpunkte sind Schmuck und zeigen keine Daten.</li>
     <li>Dachorganisationen sind zu einer Kugel zusammengefasst und stehen im Stadtplan an ihrem Hauptsitz.</li>
     <li>Im Netz sitzen alle Orte auf der Oberfläche einer Kugel, eng verbundene näher beisammen. Die Lage hat sonst keine Bedeutung.</li></ul>
     <h3>Quellen</h3>
@@ -86,6 +90,8 @@ export function aboutHtml(lang, f) {
     <h3>The rules</h3>
     <ul><li>A line only counts when two different people work at the two places. One person with two employers is not a collaboration.</li>
     <li>The volume of a sphere grows with the number of publications, the thickness of a line with the number of joint ones.</li>
+    <li>The ring around a sphere shows, on the same scale, how much a place has published without another research place in Vienna. Partners outside Vienna may still be involved.</li>
+    <li>Each line runs from the colour of one place to the colour of the other. The travelling lights are decoration and carry no data.</li>
     <li>Umbrella organisations are merged into one sphere and sit at their head office on the city map.</li>
     <li>In the network, all places sit on the surface of a sphere, closely linked ones nearer to each other. Position has no other meaning.</li></ul>
     <h3>Sources</h3>

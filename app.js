@@ -5,8 +5,8 @@ import { STRINGS, TOUR, aboutHtml } from './texts.js';
 const TOPIC_COLORS = ['#2f6fd0', '#35b58a', '#b8336a', '#f2c94c'];   // physical, life, health, social (validated for colour-vision deficiencies)
 const NO_TOPIC = '#7d8aa5';
 const BG = new THREE.Color('#000000');
-const EDGE_WEAK = new THREE.Color('#33266b'), EDGE_STRONG = new THREE.Color('#d9cfff'), EDGE_ON = new THREE.Color('#ffffff');
-const SEG = 10;                 // cylinder pieces per line, so lines can arch in the city view
+const WHITE = new THREE.Color('#ffffff');
+const SEG = 14;                 // cylinder pieces per line, so lines can curve
 const IDLE_MS = (+new URLSearchParams(location.search).get('idle') || 90) * 1000;   // ?idle=30 sets the seconds until the exhibit resets itself
 const HOME = { net: { pos: [0, 45, 262], target: [0, -6, 0] }, city: { pos: [0, 100, 150], target: [0, 0, 8] } };
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -27,6 +27,7 @@ nodes.forEach((n, i) => {
 });
 edges.forEach(e => { nodes[e.a].links.push({ other: e.b, n: e.n }); nodes[e.b].links.push({ other: e.a, n: e.n }); });
 nodes.forEach(n => n.links.sort((x, y) => y.n - x.n));
+const own = n => n.count - n.joint;   // published without another Vienna institution: drawn as a ring around the sphere
 
 const state = { lang: 'de', view: 'net', mix: 0, selected: null, hovered: null, tour: null, list: false, emph: null };
 
@@ -54,6 +55,46 @@ const meshes = nodes.map(n => {
   scene.add(m);
   return m;
 });
+
+/* One width scale for lines and rings, so a ring can be compared with the lines next to it. */
+const maxJoint = Math.max(...edges.map(e => e.n));
+const strength = e => Math.log2(e.n + 1) / Math.log2(maxJoint + 1);   // 0…1
+const width = count => 0.06 + 0.85 * Math.pow(Math.log2(count + 1) / Math.log2(maxJoint + 1), 1.6);
+
+function softDot() {   // round, soft-edged sprite for halos and travelling lights
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d'), grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.35, 'rgba(255,255,255,.45)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+const glow = softDot();
+
+const halos = nodes.map(n => {
+  const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: n.color, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.55, depthWrite: false }));
+  scene.add(h);
+  return h;
+});
+
+const rings = nodes.map(n => {
+  if (!own(n)) return null;
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(n.r * 1.5, width(own(n)) / 2, 8, 72),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(n.color).lerp(WHITE, 0.3), transparent: true, opacity: 0.8, depthWrite: false }));
+  ring.renderOrder = 2;
+  scene.add(ring);
+  return ring;
+});
+const ringNormal = nodes.map(() => new THREE.Vector3());
+
+/* Small lights that travel along the lines, in both directions, and around the rings. */
+const flecks = [];
+edges.forEach((e, k) => { const count = 1 + Math.round(3 * strength(e)); for (let j = 0; j < count; j++) flecks.push({ edge: k, u0: (j + (k * 0.37) % 1) / count, dir: (j + k) % 2 ? 1 : -1 }); });
+nodes.forEach((n, i) => { if (own(n)) for (let j = 0; j < 2; j++) flecks.push({ ring: i, u0: j / 2 + (i * 0.61) % 1 }); });
+const fleckCloud = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(flecks.length * 3), 3)),
+  new THREE.PointsMaterial({ map: glow, size: 2.4, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+fleckCloud.frustumCulled = false; fleckCloud.renderOrder = 3; fleckCloud.visible = !calm;
+scene.add(fleckCloud);
+const curve = edges.map(() => new THREE.Vector3());   // bezier control point of every line, kept for the flecks
 
 const edgeMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 6, 1, true),
   new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false }), edges.length * SEG);
@@ -105,20 +146,23 @@ function buildMap() {
 
 // ── positions, lines, highlight ────────────────────────────────────────────────────────────
 const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-const UP = new THREE.Vector3(0, 1, 0), tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), tmpC = new THREE.Vector3();
+const UP = new THREE.Vector3(0, 1, 0), AXIS_Z = new THREE.Vector3(0, 0, 1), tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), tmpC = new THREE.Vector3();
 const dummy = new THREE.Object3D(), tmpColor = new THREE.Color();
-const maxJoint = Math.max(...edges.map(e => e.n));
-const strength = e => Math.log2(e.n + 1) / Math.log2(maxJoint + 1);   // 0…1
 const radiusNow = n => n.r * (1 - (1 - graph.cityScale) * state.mix);
+const bezier = (a, ctrl, b, u, out) => out.copy(a).multiplyScalar((1 - u) * (1 - u)).addScaledVector(ctrl, 2 * u * (1 - u)).addScaledVector(b, u * u);
 
-function placeNodes() {
+function placeNodes(time) {
   const t = state.mix, at = stalks.geometry.attributes.position;
+  const sway = calm ? 0 : 1.6 * (1 - t);   // the network breathes; above the map the addresses hold still
   nodes.forEach((n, i) => {
-    cur[i].set(...n.net).lerp(tmpA.set(...n.city), t);
-    meshes[i].position.copy(cur[i]);
-    meshes[i].scale.setScalar(radiusNow(n));
+    const p = cur[i].set(...n.net).lerp(tmpA.set(...n.city), t), r = radiusNow(n);
+    if (sway) { p.x += sway * Math.sin(time * 0.0006 + i * 1.7); p.y += sway * Math.sin(time * 0.0005 + i * 2.3); p.z += sway * Math.sin(time * 0.0007 + i * 0.9); }
+    meshes[i].position.copy(p); meshes[i].scale.setScalar(r);
+    halos[i].position.copy(p); halos[i].scale.setScalar(r * 5);
+    ringNormal[i].copy(p).normalize().lerp(UP, t).normalize();   // faces outward on the sphere, lies flat above the map
+    if (rings[i]) { rings[i].position.copy(p); rings[i].scale.setScalar(r / n.r); rings[i].quaternion.setFromUnitVectors(AXIS_Z, ringNormal[i]); }
     at.setXYZ(2 * i, n.ground[0], 0, n.ground[1]);
-    at.setXYZ(2 * i + 1, cur[i].x, cur[i].y, cur[i].z);
+    at.setXYZ(2 * i + 1, p.x, p.y, p.z);
   });
   at.needsUpdate = true;
   stalks.material.opacity = 0.55 * t * t; stalks.visible = t > 0.01;
@@ -126,28 +170,49 @@ function placeNodes() {
   placeEdges();
 }
 
-
 function placeEdges() {
   const t = state.mix, em = state.emph;
   edges.forEach((e, k) => {
     const a = cur[e.a], b = cur[e.b];
-    const lift = (a.distanceTo(b) * 0.3 + 2) * t;                       // arch over the city, straight in the network
-    const ctrl = tmpC.addVectors(a, b).multiplyScalar(0.5); ctrl.y += lift;
+    // in the network a line bows outward, away from the centre; above the map it arches upward
+    const ctrl = curve[k].addVectors(a, b).multiplyScalar(0.5 * (1 + 0.32 * (1 - t)));
+    ctrl.y += (a.distanceTo(b) * 0.3 + 2) * t;
     const hidden = em && !em.edge(e);   // lines outside the focus vanish
-    const w = (0.06 + 0.85 * Math.pow(strength(e), 1.6)) * (1 - 0.45 * t);
-    const at = (u, out) => out.copy(a).multiplyScalar((1 - u) * (1 - u)).addScaledVector(ctrl, 2 * u * (1 - u)).addScaledVector(b, u * u);
+    const w = width(e.n) * (1 - 0.45 * t);
     for (let s = 0; s < SEG; s++) {
-      at(s / SEG, tmpA); at((s + 1) / SEG, tmpB);
+      bezier(a, ctrl, b, s / SEG, tmpA); bezier(a, ctrl, b, (s + 1) / SEG, tmpB);
       const len = tmpA.distanceTo(tmpB);
       dummy.position.addVectors(tmpA, tmpB).multiplyScalar(0.5);
       dummy.quaternion.setFromUnitVectors(UP, tmpB.sub(tmpA).normalize());
-      if (hidden) dummy.scale.setScalar(0); else dummy.scale.set(w, len, w);
+      if (hidden) dummy.scale.setScalar(0); else dummy.scale.set(w, len * 1.04, w);   // slight overlap hides the joints
       dummy.updateMatrix();
       edgeMesh.setMatrixAt(k * SEG + s, dummy.matrix);
     }
   });
   edgeMesh.instanceMatrix.needsUpdate = true;
-  edgeMesh.material.opacity = em ? 0.9 : 0.85 - 0.45 * t;   // over the map the arcs step back until a place is chosen
+  edgeMesh.material.opacity = em ? 0.95 : 0.9 - 0.4 * t;   // over the map the arcs step back until a place is chosen
+}
+
+function moveFlecks(time) {
+  const em = state.emph, at = fleckCloud.geometry.attributes.position, sec = time / 1000;
+  flecks.forEach((f, j) => {
+    if (f.edge !== undefined) {
+      const e = edges[f.edge], a = cur[e.a], b = cur[e.b];
+      if (em && !em.edge(e)) { at.setXYZ(j, 0, 1e6, 0); return; }
+      let u = (f.u0 + sec * 9 / (a.distanceTo(b) + 1)) % 1;   // the same speed on every line
+      if (f.dir < 0) u = 1 - u;
+      bezier(a, curve[f.edge], b, u, tmpA);
+    } else {
+      const i = f.ring, n = nodes[i];
+      if (em && !em.nodes.has(i) && !em.near.has(i)) { at.setXYZ(j, 0, 1e6, 0); return; }
+      const normal = ringNormal[i], angle = (f.u0 + sec * 0.1) * Math.PI * 2;
+      tmpB.crossVectors(normal, Math.abs(normal.y) < 0.9 ? UP : AXIS_Z).normalize(); tmpC.crossVectors(normal, tmpB);
+      tmpA.copy(cur[i]).addScaledVector(tmpB, Math.cos(angle) * radiusNow(n) * 1.5).addScaledVector(tmpC, Math.sin(angle) * radiusNow(n) * 1.5);
+    }
+    at.setXYZ(j, tmpA.x, tmpA.y, tmpA.z);
+  });
+  at.needsUpdate = true;
+  fleckCloud.material.size = 2.4 * (1 - 0.4 * state.mix);
 }
 
 /* emph: null, or { nodes: Set (lit), near: Set (lit), edge: e => bool }. Everything else recedes. */
@@ -159,11 +224,14 @@ function paint() {
     m.transparent = !lit; m.opacity = lit ? 1 : 0.16; m.depthWrite = lit; m.needsUpdate = true;
     meshes[i].renderOrder = lit ? 0 : 1;
     m.emissiveIntensity = em && em.nodes.has(i) ? 0.6 : 0.35;
+    halos[i].visible = lit;
+    if (rings[i]) rings[i].material.opacity = lit ? 0.8 : 0.07;
   });
   edges.forEach((e, k) => {
-    // on black, a darker line reads as a fainter one: one-off partnerships recede, close ones shine
-    const c = em ? EDGE_ON : tmpColor.copy(EDGE_WEAK).lerp(EDGE_STRONG, strength(e));
-    for (let s = 0; s < SEG; s++) edgeMesh.setColorAt(k * SEG + s, c);
+    // a line runs from the colour of one place to the colour of the other. On black, darker reads
+    // as fainter: one-off partnerships recede, close ones shine
+    const from = meshes[e.a].userData.base, to = meshes[e.b].userData.base, shine = em ? 1 : 0.2 + 0.8 * strength(e);
+    for (let s = 0; s < SEG; s++) edgeMesh.setColorAt(k * SEG + s, tmpColor.copy(from).lerp(to, (s + 0.5) / SEG).lerp(WHITE, 0.25).multiplyScalar(shine));
   });
   edgeMesh.instanceColor.needsUpdate = true;
   placeEdges();
@@ -179,7 +247,31 @@ function flyTo(pos, target, ms = 1300) {
   if (calm) { camera.position.copy(pos); controls.target.copy(target); return; }
   flight = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos.clone(), t1: target.clone(), start: performance.now(), ms };
 }
-function flyHome() { const h = HOME[state.view]; flyTo(new THREE.Vector3(...h.pos), new THREE.Vector3(...h.target)); }
+const upright = matchMedia('(max-width: 900px) and (orientation: portrait)');   // the phone layout of style.css
+
+function home() {
+  const h = HOME[state.view], pos = new THREE.Vector3(...h.pos), target = new THREE.Vector3(...h.target);
+  if (upright.matches) {   // narrow screen: step back until the width fits, and sit above the bottom row
+    if (state.view === 'net') target.y -= 12; else target.z += 16;
+    pos.sub(new THREE.Vector3(...h.target)).multiplyScalar(state.view === 'net' ? 1.08 : 1.25).add(target);
+  }
+  const dir = pos.clone().sub(target), dist = dir.length(), shift = cardShift(dir.normalize(), dist);
+  return [pos.add(shift), target.add(shift)];
+}
+function flyHome() { flyTo(...home()); }
+
+/* How far the camera must step aside so that what it looks at sits in the part of the screen
+   an open card leaves free. Measured from the card itself, so every layout is covered:
+   side panel, bottom sheet, tour card. */
+function cardShift(dir, dist) {
+  const card = state.tour !== null ? $('tour') : $('panel');
+  if (card.hidden) return new THREE.Vector3();
+  const r = card.getBoundingClientRect(), viewH = 2 * dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const right = new THREE.Vector3().crossVectors(UP, dir).normalize();
+  if (r.left < W / 2 && r.right > W / 2) return new THREE.Vector3().crossVectors(dir, right).multiplyScalar(-(H - r.top) / 2 / H * viewH);   // card below
+  return right.multiplyScalar((W - r.left) / 2 / W * viewH * camera.aspect);                                                                 // card at the right
+}
+matchMedia('(orientation: portrait)').addEventListener('change', () => setTimeout(() => { if (state.selected === null) flyHome(); else flyToNode(state.selected); }, 100));   // after the layout has turned
 
 function flyToNode(i) {
   const n = nodes[i], target = new THREE.Vector3(...(state.view === 'net' ? n.net : n.city));
@@ -189,12 +281,9 @@ function flyToNode(i) {
   flyFacing(target, dir, dist);
 }
 
-/* Look at `target` from direction `dir`, but keep it clear of the open card:
-   left of the side panel on wide screens, above the tour card or the phone's bottom sheet. */
+/* Look at `target` from direction `dir`, clear of any open card. */
 function flyFacing(target, dir, dist) {
-  const right = new THREE.Vector3().crossVectors(UP, dir).normalize(), up = new THREE.Vector3().crossVectors(dir, right);
-  const shift = state.tour !== null || innerWidth <= 900 ? up.multiplyScalar(-dist * 0.2) : right.multiplyScalar(-dist * 0.14);
-  const centre = target.clone().add(shift);
+  const centre = target.clone().add(cardShift(dir, dist));
   flyTo(centre.clone().addScaledVector(dir, dist), centre);
 }
 
@@ -308,7 +397,7 @@ function renderPanel() {
   if (panel.hidden) return;
   const close = `<button type="button" class="btn close" id="panelClose" aria-label="${t('close')}">×</button>`;
   if (i === null) {
-    panel.innerHTML = `${close}<h2>${fill(t('listTitle'), facts())}</h2><p class="note">${t('listNote')}</p>
+    panel.innerHTML = `${close}<h2>${fill(t('listTitle'), facts())}</h2><p class="note">${fill(t('listNote'), facts())}</p>
       <div class="rows" style="margin-top:14px">${nodes.map(n => `<button type="button" class="row" data-node="${n.i}">${dot(n.color)}<span>${esc(n.id)}</span><span class="n">${num(n.count)}</span></button>`).join('')}</div>`;
   } else {
     const n = nodes[i], name = state.lang === 'de' ? n.name : n.en, sum = n.dom.reduce((a, b) => a + b, 0);
@@ -320,7 +409,7 @@ function renderPanel() {
       <p class="hero"><b>${num(n.count)}</b><span>${fill(t('heroUnit'), facts())}</span></p>
       <h3>${t('togetherTitle')}</h3>
       <div class="together"><i style="width:${pct}%"></i></div>
-      <p class="note">${fill(t('togetherNote'), { n: `<b>${num(n.joint)}</b>`, pct })}</p>
+      <p class="note">${fill(t('togetherNote'), { n: `<b>${num(n.joint)}</b>`, pct })}${own(n) ? ' ' + fill(t('ringNote'), { n: num(own(n)) }) : ''}</p>
       ${sum ? `<h3>${t('topicsTitle')}</h3>
       <div class="mix">${mix.map(x => `<i style="flex:${x.v};background:${TOPIC_COLORS[x.d]}"></i>`).join('')}</div>
       <ul class="mix-key">${mix.map(x => `<li>${dot(TOPIC_COLORS[x.d])}<span>${t('topics')[x.d]}</span><span class="n">${Math.round(100 * x.v / sum)} %</span></li>`).join('')}</ul>` : ''}
@@ -404,14 +493,15 @@ function resize() {
 }
 addEventListener('resize', resize);
 
+let placed = false;
 function frame(now) {
   requestAnimationFrame(frame);
   if (mixing) {
     const u = Math.min(1, (now - mixing.start) / mixing.ms);
     state.mix = mixing.from + (mixing.to - mixing.from) * ease(u);
     if (u === 1) mixing = null;
-    placeNodes();
   }
+  if (mixing || !calm || !placed) { placeNodes(now); moveFlecks(now); placed = true; }
   if (flight) {
     const u = Math.min(1, (now - flight.start) / flight.ms), k = ease(u);
     camera.position.lerpVectors(flight.p0, flight.p1, k);
@@ -429,7 +519,8 @@ function frame(now) {
 
 document.fonts.ready.then(() => labels.forEach(l => { l.w = 0; }));   // label widths were measured in the fallback font
 resize();
-placeNodes();
+{ const [pos, target] = home(); camera.position.copy(pos); controls.target.copy(target); }
+placeNodes(0);
 paint();
 applyTexts();
 requestAnimationFrame(frame);
