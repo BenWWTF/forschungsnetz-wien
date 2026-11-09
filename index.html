@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Wer forscht mit wem in Wien? Ein Netz in 3D</title>
+  <meta name="description" content="Prototyp für eine Ausstellung: Wiens Forschungsorte und ihre gemeinsamen Veröffentlichungen als 3D-Netz zum Drehen und Antippen.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0b1530">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1530'/%3E%3Cpath d='M9 22 22 10' stroke='%239fd4ff' stroke-width='2'/%3E%3Ccircle cx='9' cy='22' r='5' fill='%232f6fd0'/%3E%3Ccircle cx='22' cy='10' r='4' fill='%23f2c94c'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
+</head>
+<body>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div id="labels" aria-hidden="true"></div>
+
+  <header class="top">
+    <div class="title">
+      <h1 data-t="title"></h1>
+      <p id="subtitle"></p>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" data-t-label="viewLabel">
+        <button type="button" id="viewNet" data-t="viewNet" aria-pressed="true"></button>
+        <button type="button" id="viewCity" data-t="viewCity" aria-pressed="false"></button>
+      </div>
+      <button type="button" class="btn" id="lang" data-t-label="langLabel"></button>
+    </div>
+  </header>
+
+  <aside class="panel" id="panel" hidden aria-live="polite"></aside>
+
+  <section class="legend" id="legend" data-t-label="legendLabel">
+    <ul id="legendTopics"></ul>
+    <p><span class="key-ball"></span><span data-t="keyBall"></span></p>
+    <p><span class="key-line"></span><span data-t="keyLine"></span></p>
+  </section>
+
+  <div class="dock" id="dock">
+    <button type="button" class="btn primary" id="tourStart" data-t="tourStart"></button>
+    <button type="button" class="btn" id="listOpen" data-t="listOpen"></button>
+    <button type="button" class="btn" id="aboutOpen" data-t="aboutOpen"></button>
+  </div>
+
+  <section class="tour" id="tour" hidden aria-live="polite">
+    <p class="tour-step" id="tourCount"></p>
+    <h2 id="tourTitle"></h2>
+    <div id="tourBody"></div>
+    <div class="tour-nav">
+      <button type="button" class="btn" id="tourBack" data-t="back"></button>
+      <button type="button" class="btn primary" id="tourNext"></button>
+      <button type="button" class="btn quiet" id="tourClose" data-t="tourClose"></button>
+    </div>
+  </section>
+
+  <dialog id="about">
+    <div id="aboutBody"></div>
+    <form method="dialog"><button class="btn primary" data-t="close"></button></form>
+  </dialog>
+
+  <p class="fallback" id="fallback" hidden data-t="noWebgl"></p>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

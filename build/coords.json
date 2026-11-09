@@ -1,0 +1,426 @@
+{
+ "Universität Wien": {
+  "lat": 48.2131278,
+  "lon": 16.3606855,
+  "by_name": {
+   "lat": 48.2131957,
+   "lon": 16.3601769,
+   "display": "Universität Wien, Universitätsstraße, Schottenviertel, Katastralgemeinde Innere Stadt, Innere Stadt, Wien, 1010, Österreich"
+  },
+  "delta_m": 38
+ },
+ "MedUni Wien": {
+  "lat": 48.2204711,
+  "lon": 16.3517537,
+  "by_name": {
+   "lat": 48.2163949,
+   "lon": 16.3609242,
+   "display": "Institut für Medizinische Chemie, 10, Währinger Straße, Alservorstadt, Katastralgemeinde Alsergrund, Alsergrund, Wien, 1090, Österreich"
+  },
+  "delta_m": 818
+ },
+ "TU Wien": {
+  "lat": 48.1985397,
+  "lon": 16.3698617,
+  "by_name": {
+   "lat": 48.1985397,
+   "lon": 16.3698617,
+   "display": "TU Wien, Hauptgebäude, 13, Karlsplatz, Freihausviertel, Wieden, Wien, 1040, Österreich"
+  },
+  "delta_m": 0
+ },
+ "IIASA": {
+  "lat": 48.0677839,
+  "lon": 16.3576303,
+  "by_name": {
+   "lat": 48.0682722,
+   "lon": 16.3581708,
+   "display": "IIASA, 1, Schlossplatz, Katastralgemeinde Laxenburg, Laxenburg, Bezirk Mödling, Niederösterreich, 2361, Österreich"
+  },
+  "delta_m": 68
+ },
+ "BOKU": {
+  "lat": 48.2365926,
+  "lon": 16.3374816,
+  "by_name": {
+   "lat": 48.2467548,
+   "lon": 16.3673228,
+   "display": "Universität für Bodenkultur Wien, 18, Muthgasse, Katastralgemeinde Nußdorf, Döbling, Wien, 1190, Österreich"
+  },
+  "delta_m": 2485
+ },
+ "OeAW": {
+  "lat": 48.2089035,
+  "lon": 16.3770808,
+  "by_name": {
+   "lat": 48.208578,
+   "lon": 16.3780363,
+   "display": "Österreichische Akademie der Wissenschaften, 13, Bäckerstraße, Stubenviertel, Katastralgemeinde Innere Stadt, Innere Stadt, Wien, 1010, Österreich"
+  },
+  "delta_m": 80
+ },
+ "IST Austria": {
+  "lat": 48.3129077,
+  "lon": 16.2571238,
+  "by_name": {
+   "lat": 48.3114581,
+   "lon": 16.2589512,
+   "display": "ISTA (Institute of Science and Technology Austria), 1, Am Campus, Katastralgemeinde Gugging, Maria Gugging, Klosterneuburg, Bezirk Tulln, Niederösterreich, 3400, Österreich"
+  },
+  "delta_m": 211
+ },
+ "AIT": {
+  "lat": 48.2690574,
+  "lon": 16.4271937,
+  "by_name": null,
+  "delta_m": null
+ },
+ "WU Wien": {
+  "lat": 48.2136862,
+  "lon": 16.4085807,
+  "by_name": {
+   "lat": 48.2135929,
+   "lon": 16.4082366,
+   "display": "Wirtschaftsuniversität Wien, 1, Welthandelsplatz, Leopoldstadt, Katastralgemeinde Leopoldstadt, Leopoldstadt, Wien, 1020, Österreich"
+  },
+  "delta_m": 28
+ },
+ "Vienna BioCenter": {
+  "lat": 48.1892464,
+  "lon": 16.4018541,
+  "by_name": {
+   "lat": 48.188329,
+   "lon": 16.3987294,
+   "display": "Wien St. Marx, Landstraßer Hauptstraße, Karrée St. Marx, St. Marx, Katastralgemeinde Landstraße, Landstraße, Wien, 1030, Österreich"
+  },
+  "delta_m": 253
+ },
+ "Ludwig Boltzmann Gesellschaft": {
+  "lat": 48.2281412,
+  "lon": 16.3550182,
+  "by_name": {
+   "lat": 48.2282586,
+   "lon": 16.3550837,
+   "display": "Ludwig Boltzmann Gesellschaft, 64, Nußdorfer Straße, Thurygrund II, Katastralgemeinde Alsergrund, Alsergrund, Wien, 1090, Österreich"
+  },
+  "delta_m": 14
+ },
+ "VetMedUni Wien": {
+  "lat": 48.2530135,
+  "lon": 16.4301838,
+  "by_name": {
+   "lat": 48.2548154,
+   "lon": 16.4304238,
+   "display": "Veterinärmedizinische Universität, Budaugasse, Katastralgemeinde Leopoldau, Floridsdorf, Wien, 1220, Österreich"
+  },
+  "delta_m": 201
+ },
+ "SFU Wien": {
+  "lat": 48.2151342,
+  "lon": 16.4052964,
+  "by_name": {
+   "lat": 48.2151342,
+   "lon": 16.4052964,
+   "display": "Sigmund Freud Privatuniversität, 1, Freudplatz, Leopoldstadt, Katastralgemeinde Leopoldstadt, Leopoldstadt, Wien, 1020, Österreich"
+  },
+  "delta_m": 0
+ },
+ "Wiener Gesundheitsverbund": {
+  "lat": 48.1944299,
+  "lon": 16.4102208,
+  "by_name": {
+   "lat": 48.267283,
+   "lon": 16.4063201,
+   "display": "Klinik Floridsdorf - Wiener Gesundheitsverbund, 68, Brünner Straße, Neujedlersdorf, Katastralgemeinde Großjedlersdorf II, Floridsdorf, Wien, 1210, Österreich"
+  },
+  "delta_m": 8115
+ },
+ "Complexity Science Hub": {
+  "lat": 48.1969739,
+  "lon": 16.3818637,
+  "by_name": {
+   "lat": 48.1969739,
+   "lon": 16.3818637,
+   "display": "Complexity Science Hub, 8, Metternichgasse, Botschaftsviertel, Landstraße, Katastralgemeinde Landstraße, Landstraße, Wien, 1030, Österreich"
+  },
+  "delta_m": 0
+ },
+ "NHM Wien": {
+  "lat": 48.2052692,
+  "lon": 16.3597554,
+  "by_name": {
+   "lat": 48.2052692,
+   "lon": 16.3597554,
+   "display": "Naturhistorisches Museum, 7, Burgring, Regierungsviertel, Katastralgemeinde Innere Stadt, Innere Stadt, Wien, 1010, Österreich"
+  },
+  "delta_m": 0
+ },
+ "St. Anna Kinderspital": {
+  "lat": 48.2162161,
+  "lon": 16.3443762,
+  "by_name": {
+   "lat": 48.2162161,
+   "lon": 16.3443762,
+   "display": "St. Anna Kinderspital, 6, Kinderspitalgasse, Michelbeuern, Katastralgemeinde Alsergrund, Alsergrund, Wien, 1090, Österreich"
+  },
+  "delta_m": 0
+ },
+ "AGES": {
+  "lat": 48.2533378,
+  "lon": 16.4839186,
+  "by_name": {
+   "lat": 48.2542532,
+   "lon": 16.4830172,
+   "display": "Österreichische Agentur für Gesundheit und Ernährungssicherheit, Katastralgemeinde Hirschstetten, Donaustadt, Wien, Österreich"
+  },
+  "delta_m": 122
+ },
+ "VCQ": {
+  "lat": 48.2216488,
+  "lon": 16.3557522,
+  "by_name": null,
+  "delta_m": null
+ },
+ "GeoSphere Austria": {
+  "lat": 48.248626,
+  "lon": 16.3565623,
+  "by_name": {
+   "lat": 48.1995268,
+   "lon": 16.3857569,
+   "display": "GeoSphere Austria, 38, Neulinggasse, Botschaftsviertel, Landstraße, Katastralgemeinde Landstraße, Landstraße, Wien, 1030, Österreich"
+  },
+  "delta_m": 5879
+ },
+ "Austrian Cluster for Tissue Regeneration": {
+  "lat": 48.2369164,
+  "lon": 16.383794,
+  "by_name": null,
+  "delta_m": null
+ },
+ "Hanusch-Krankenhaus": {
+  "lat": 48.1995552,
+  "lon": 16.291749,
+  "by_name": {
+   "lat": 48.1995552,
+   "lon": 16.291749,
+   "display": "Hanusch-Krankenhaus, 30, Heinrich-Collin-Straße, Katastralgemeinde Breitensee, Penzing, Wien, 1140, Österreich"
+  },
+  "delta_m": 0
+ },
+ "Orthopädisches Spital Speising": {
+  "lat": 48.1634837,
+  "lon": 16.2822596,
+  "by_name": {
+   "lat": 48.1634837,
+   "lon": 16.2822596,
+   "display": "Orthopädisches Spital Speising, 109, Speisinger Straße, Katastralgemeinde Speising, Hietzing, Wien, 1130, Österreich"
+  },
+  "delta_m": 0
+ },
+ "CEU": {
+  "lat": 48.1733737,
+  "lon": 16.3878467,
+  "by_name": {
+   "lat": 48.1733737,
+   "lon": 16.3878467,
+   "display": "Central European University, 51, Quellenstraße, Kreta, Katastralgemeinde Favoriten, Favoriten, Wien, 1100, Österreich"
+  },
+  "delta_m": 0
+ },
+ "Umweltbundesamt": {
+  "lat": 48.2271986,
+  "lon": 16.363633,
+  "by_name": {
+   "lat": 48.1990745,
+   "lon": 16.4073696,
+   "display": "Umweltbundesamt, 1/1, Erdberg, Katastralgemeinde Landstraße, Landstraße, Wien, 1030, Österreich"
+  },
+  "delta_m": 4508
+ },
+ "FH Campus Wien": {
+  "lat": 48.1578869,
+  "lon": 16.3818663,
+  "by_name": {
+   "lat": 48.1886073,
+   "lon": 16.4032895,
+   "display": "FH Campus Wien - Standort Helmut-Qualtinger-Gasse, Helmut-Qualtinger-Gasse, Neu Marx, St. Marx, Katastralgemeinde Landstraße, Landstraße, Wien, 1030, Österreich"
+  },
+  "delta_m": 3772
+ },
+ "Gesundheit Österreich": {
+  "lat": 48.2102764,
+  "lon": 16.3821943,
+  "by_name": {
+   "lat": 48.2101726,
+   "lon": 16.3821618,
+   "display": "Gesundheit Österreich GmbH, 6, Stubenring, Stubenviertel, Katastralgemeinde Innere Stadt, Innere Stadt, Wien, 1010, Österreich"
+  },
+  "delta_m": 12
+ },
+ "WIFO": {
+  "lat": 48.1816133,
+  "lon": 16.3899395,
+  "by_name": null,
+  "delta_m": null
+ },
+ "FH Technikum Wien": {
+  "lat": 48.2391664,
+  "lon": 16.3774409,
+  "by_name": {
+   "lat": 48.2391664,
+   "lon": 16.3774409,
+   "display": "FH Technikum Wien, 6, Höchstädtplatz, Brigittenau, Katastralgemeinde Brigittenau, Brigittenau, Wien, 1200, Österreich"
+  },
+  "delta_m": 0
+ },
+ "Barmherzige Brüder Wien": {
+  "lat": 48.2151239,
+  "lon": 16.3818248,
+  "by_name": {
+   "lat": 48.2151239,
+   "lon": 16.3818248,
+   "display": "Krankenhaus der Barmherzigen Brüder Wien, 1, Johannes-von-Gott-Platz, Afrikanerviertel, Leopoldstadt, Katastralgemeinde Leopoldstadt, Leopoldstadt, Wien, 1020, Österreich"
+  },
+  "delta_m": 0
+ },
+ "KLI Klosterneuburg": {
+  "lat": 48.3109243,
+  "lon": 16.323854,
+  "by_name": null,
+  "delta_m": null
+ },
+ "Wolfgang Pauli Institute": {
+  "lat": 48.2190633,
+  "lon": 16.3664547,
+  "by_name": null,
+  "delta_m": null
+ },
+ "MODUL University": {
+  "lat": 48.274765,
+  "lon": 16.3359783,
+  "by_name": {
+   "lat": 48.274765,
+   "lon": 16.3359783,
+   "display": "Modul University Vienna, 1, Am Kahlenberg, Katastralgemeinde Josefsdorf, Döbling, Wien, 1190, Österreich"
+  },
+  "delta_m": 0
+ },
+ "KPH Wien/Krems": {
+  "lat": 48.2951984,
+  "lon": 16.3801298,
+  "by_name": null,
+  "delta_m": null
+ },
+ "BFW": {
+  "lat": 48.1782684,
+  "lon": 16.3029803,
+  "by_name": null,
+  "delta_m": null
+ },
+ "SBA Research": {
+  "lat": 48.1943144,
+  "lon": 16.3685199,
+  "by_name": {
+   "lat": 48.1944376,
+   "lon": 16.3684593,
+   "display": "SBA Research gGmbH, 7, Floragasse, Freihausviertel, Wieden, Wien, 1040, Österreich"
+  },
+  "delta_m": 14
+ },
+ "BEV": {
+  "lat": 48.218675,
+  "lon": 16.3730461,
+  "by_name": {
+   "lat": 48.2188239,
+   "lon": 16.3730485,
+   "display": "Bundesamt für Eich- und Vermessungswesen, Franz-Hochedlinger-Gasse, Rembrandtviertel, Leopoldstadt, Katastralgemeinde Leopoldstadt, Leopoldstadt, Wien, 1020, Österreich"
+  },
+  "delta_m": 17
+ },
+ "ABCSG": {
+  "lat": 48.2604553,
+  "lon": 16.3666519,
+  "by_name": null,
+  "delta_m": null
+ },
+ "FH des BFI Wien": {
+  "lat": 48.2190775,
+  "lon": 16.4032983,
+  "by_name": null,
+  "delta_m": null
+ },
+ "IHS Wien": {
+  "lat": 48.2095525,
+  "lon": 16.3478834,
+  "by_name": {
+   "lat": 48.2095525,
+   "lon": 16.3478834,
+   "display": "Institut für Höhere Studien, 39, Josefstädter Straße, Strozzigrund, Josefstadt, Katastralgemeinde Josefstadt, Josefstadt, Wien, 1080, Österreich"
+  },
+  "delta_m": 0
+ },
+ "Akademie der bildenden Künste Wien": {
+  "lat": 48.2014227,
+  "lon": 16.3656335,
+  "by_name": {
+   "lat": 48.2014227,
+   "lon": 16.3656335,
+   "display": "Akademie der bildenden Künste, 3, Schillerplatz, Katastralgemeinde Innere Stadt, Innere Stadt, Wien, 1010, Österreich"
+  },
+  "delta_m": 0
+ },
+ "VIROS": {
+  "lat": 48.1995552,
+  "lon": 16.291749,
+  "by_name": null,
+  "delta_m": null
+ },
+ "mdw Wien": {
+  "lat": 48.2020489,
+  "lon": 16.3856527,
+  "by_name": null,
+  "delta_m": null
+ },
+ "Webster Vienna": {
+  "lat": 48.2141267,
+  "lon": 16.3829469,
+  "by_name": null,
+  "delta_m": null
+ },
+ "Fraunhofer Austria": {
+  "lat": 48.1924855,
+  "lon": 16.3774223,
+  "by_name": {
+   "lat": 47.2871245,
+   "lon": 11.5927436,
+   "display": "Fraunhofer, 6, Weisstraße, Wattens, Bezirk Innsbruck-Land, Tirol, 6112, Österreich"
+  },
+  "delta_m": 369094
+ },
+ "FHWien der WKW": {
+  "lat": 48.2273469,
+  "lon": 16.3490951,
+  "by_name": {
+   "lat": 48.2263343,
+   "lon": 16.3490715,
+   "display": "FHWien der WKW, 97, Währinger Gürtel, Katastralgemeinde Währing, Währing, Wien, 1180, Österreich"
+  },
+  "delta_m": 113
+ },
+ "Angewandte Wien": {
+  "lat": 48.2080912,
+  "lon": 16.3825022,
+  "by_name": {
+   "lat": 48.2099797,
+   "lon": 16.3810817,
+   "display": "Universität für angewandte Kunst, Biberstraße, Stubenviertel, Katastralgemeinde Innere Stadt, Innere Stadt, Wien, 1010, Österreich"
+  },
+  "delta_m": 235
+ },
+ "VRVis": {
+  "lat": 48.2336273,
+  "lon": 16.411618,
+  "by_name": null,
+  "delta_m": null
+ }
+}
