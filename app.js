@@ -27,7 +27,7 @@ nodes.forEach((n, i) => {
 });
 edges.forEach(e => { nodes[e.a].links.push({ other: e.b, n: e.n }); nodes[e.b].links.push({ other: e.a, n: e.n }); });
 nodes.forEach(n => n.links.sort((x, y) => y.n - x.n));
-const own = n => n.count - n.joint;   // published without another Vienna institution: drawn as a ring around the sphere
+const own = n => n.count - n.joint;   // published without another Vienna institution: drawn as small arcs that leave the sphere and fall back to it
 
 const state = { lang: 'de', view: 'net', mix: 0, selected: null, hovered: null, tour: null, list: false, emph: null };
 
@@ -61,7 +61,7 @@ const maxJoint = Math.max(...edges.map(e => e.n));
 const strength = e => Math.log2(e.n + 1) / Math.log2(maxJoint + 1);   // 0…1
 const width = count => 0.06 + 0.85 * Math.pow(Math.log2(count + 1) / Math.log2(maxJoint + 1), 1.6);
 
-function softDot() {   // round, soft-edged sprite for halos and travelling lights
+function softDot() {   // round, soft-edged sprite for the travelling lights
   const c = document.createElement('canvas'); c.width = c.height = 64;
   const g = c.getContext('2d'), grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
   grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.35, 'rgba(255,255,255,.45)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
@@ -70,26 +70,31 @@ function softDot() {   // round, soft-edged sprite for halos and travelling ligh
 }
 const glow = softDot();
 
-const halos = nodes.map(n => {
-  const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: n.color, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.55, depthWrite: false }));
-  scene.add(h);
-  return h;
+/* In-house work, drawn like the prominences of the sun: small arcs that rise from a sphere and
+   fall back to it. The more a place publishes without a Vienna partner, the more arcs (1 to 7). */
+const ASEG = 8;
+const maxOwn = Math.max(...nodes.map(own));
+const seeded = k => { const x = Math.sin(k * 127.1) * 43758.5453; return x - Math.floor(x); };   // repeatable pseudo-random 0…1
+const arcs = [];
+nodes.forEach((n, i) => {
+  if (!own(n)) return;
+  const count = Math.max(1, Math.round(7 * Math.log2(own(n) + 1) / Math.log2(maxOwn + 1)));
+  for (let j = 0; j < count; j++) {
+    const k = i * 31 + j * 7, unit = o => new THREE.Vector3(seeded(k + o) - 0.5, seeded(k + o + 1) - 0.5, seeded(k + o + 2) - 0.5).normalize();
+    arcs.push({ i, lean: unit(1), twist: unit(5), rise: 1.9 + 0.9 * seeded(k + 9), span: 0.4 + 0.3 * seeded(k + 11),
+      from: new THREE.Vector3(), top: new THREE.Vector3(), to: new THREE.Vector3() });
+  }
 });
-
-const rings = nodes.map(n => {
-  if (!own(n)) return null;
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(n.r * 1.5, width(own(n)) / 2, 8, 72),
-    new THREE.MeshBasicMaterial({ color: new THREE.Color(n.color).lerp(WHITE, 0.3), transparent: true, opacity: 0.8, depthWrite: false }));
-  ring.renderOrder = 2;
-  scene.add(ring);
-  return ring;
-});
-const ringNormal = nodes.map(() => new THREE.Vector3());
+const arcMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 5, 1, true),
+  new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.9, depthWrite: false }), arcs.length * ASEG);
+arcMesh.frustumCulled = false; arcMesh.renderOrder = 2;
+scene.add(arcMesh);
+const outward = nodes.map(() => new THREE.Vector3());   // away from the centre of the network, upward above the map
 
 /* Small lights that travel along the lines, in both directions, and around the rings. */
 const flecks = [];
 edges.forEach((e, k) => { const count = 1 + Math.round(3 * strength(e)); for (let j = 0; j < count; j++) flecks.push({ edge: k, u0: (j + (k * 0.37) % 1) / count, dir: (j + k) % 2 ? 1 : -1 }); });
-nodes.forEach((n, i) => { if (own(n)) for (let j = 0; j < 2; j++) flecks.push({ ring: i, u0: j / 2 + (i * 0.61) % 1 }); });
+arcs.forEach((a, k) => flecks.push({ arc: k, u0: seeded(k + 3) }));
 const fleckCloud = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(flecks.length * 3), 3)),
   new THREE.PointsMaterial({ map: glow, size: 2.4, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
 fleckCloud.frustumCulled = false; fleckCloud.renderOrder = 3; fleckCloud.visible = !calm;
@@ -158,9 +163,7 @@ function placeNodes(time) {
     const p = cur[i].set(...n.net).lerp(tmpA.set(...n.city), t), r = radiusNow(n);
     if (sway) { p.x += sway * Math.sin(time * 0.0006 + i * 1.7); p.y += sway * Math.sin(time * 0.0005 + i * 2.3); p.z += sway * Math.sin(time * 0.0007 + i * 0.9); }
     meshes[i].position.copy(p); meshes[i].scale.setScalar(r);
-    halos[i].position.copy(p); halos[i].scale.setScalar(r * 5);
-    ringNormal[i].copy(p).normalize().lerp(UP, t).normalize();   // faces outward on the sphere, lies flat above the map
-    if (rings[i]) { rings[i].position.copy(p); rings[i].scale.setScalar(r / n.r); rings[i].quaternion.setFromUnitVectors(AXIS_Z, ringNormal[i]); }
+    outward[i].copy(p).normalize().lerp(UP, t).normalize();
     at.setXYZ(2 * i, n.ground[0], 0, n.ground[1]);
     at.setXYZ(2 * i + 1, p.x, p.y, p.z);
   });
@@ -189,6 +192,25 @@ function placeEdges() {
       edgeMesh.setMatrixAt(k * SEG + s, dummy.matrix);
     }
   });
+  arcs.forEach((arc, k) => {
+    const i = arc.i, p = cur[i], r = radiusNow(nodes[i]), hidden = em && !em.nodes.has(i) && !em.near.has(i);
+    const dir = tmpC.copy(outward[i]).addScaledVector(arc.lean, 1.1).normalize();          // where on the sphere the arc stands
+    const side = tmpB.crossVectors(dir, arc.twist).normalize().multiplyScalar(arc.span);  // how far apart its two feet are
+    arc.from.copy(dir).add(side).normalize().multiplyScalar(r).add(p);
+    arc.to.copy(dir).sub(side).normalize().multiplyScalar(r).add(p);
+    arc.top.copy(p).addScaledVector(dir, r * arc.rise);
+    const w = 0.035 * r + 0.1;
+    for (let s = 0; s < ASEG; s++) {
+      bezier(arc.from, arc.top, arc.to, s / ASEG, tmpA); bezier(arc.from, arc.top, arc.to, (s + 1) / ASEG, tmpB);
+      const len = tmpA.distanceTo(tmpB);
+      dummy.position.addVectors(tmpA, tmpB).multiplyScalar(0.5);
+      dummy.quaternion.setFromUnitVectors(UP, tmpB.sub(tmpA).normalize());
+      if (hidden) dummy.scale.setScalar(0); else dummy.scale.set(w, len * 1.06, w);
+      dummy.updateMatrix();
+      arcMesh.setMatrixAt(k * ASEG + s, dummy.matrix);
+    }
+  });
+  arcMesh.instanceMatrix.needsUpdate = true;
   edgeMesh.instanceMatrix.needsUpdate = true;
   edgeMesh.material.opacity = em ? 0.95 : 0.9 - 0.4 * t;   // over the map the arcs step back until a place is chosen
 }
@@ -203,11 +225,9 @@ function moveFlecks(time) {
       if (f.dir < 0) u = 1 - u;
       bezier(a, curve[f.edge], b, u, tmpA);
     } else {
-      const i = f.ring, n = nodes[i];
-      if (em && !em.nodes.has(i) && !em.near.has(i)) { at.setXYZ(j, 0, 1e6, 0); return; }
-      const normal = ringNormal[i], angle = (f.u0 + sec * 0.1) * Math.PI * 2;
-      tmpB.crossVectors(normal, Math.abs(normal.y) < 0.9 ? UP : AXIS_Z).normalize(); tmpC.crossVectors(normal, tmpB);
-      tmpA.copy(cur[i]).addScaledVector(tmpB, Math.cos(angle) * radiusNow(n) * 1.5).addScaledVector(tmpC, Math.sin(angle) * radiusNow(n) * 1.5);
+      const arc = arcs[f.arc];
+      if (em && !em.nodes.has(arc.i) && !em.near.has(arc.i)) { at.setXYZ(j, 0, 1e6, 0); return; }
+      bezier(arc.from, arc.top, arc.to, (f.u0 + sec * 0.22) % 1, tmpA);
     }
     at.setXYZ(j, tmpA.x, tmpA.y, tmpA.z);
   });
@@ -224,8 +244,6 @@ function paint() {
     m.transparent = !lit; m.opacity = lit ? 1 : 0.16; m.depthWrite = lit; m.needsUpdate = true;
     meshes[i].renderOrder = lit ? 0 : 1;
     m.emissiveIntensity = em && em.nodes.has(i) ? 0.6 : 0.35;
-    halos[i].visible = lit;
-    if (rings[i]) rings[i].material.opacity = lit ? 0.8 : 0.07;
   });
   edges.forEach((e, k) => {
     // a line runs from the colour of one place to the colour of the other. On black, darker reads
@@ -521,6 +539,7 @@ document.fonts.ready.then(() => labels.forEach(l => { l.w = 0; }));   // label w
 resize();
 { const [pos, target] = home(); camera.position.copy(pos); controls.target.copy(target); }
 placeNodes(0);
+arcs.forEach((arc, k) => { for (let s = 0; s < ASEG; s++) arcMesh.setColorAt(k * ASEG + s, tmpColor.copy(meshes[arc.i].userData.base).lerp(WHITE, 0.45)); });
 paint();
 applyTexts();
 requestAnimationFrame(frame);
