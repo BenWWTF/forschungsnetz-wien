@@ -32,7 +32,8 @@ button { font: inherit; color: inherit; }
 
 .top { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: max(16px, env(safe-area-inset-top)) var(--edge) 0; pointer-events: none; }
 .top > * { pointer-events: auto; }
-.title { max-width: 760px; }
+.title { max-width: 840px; display: flex; align-items: flex-start; gap: 18px; }
+.mark { height: clamp(40px, 4.2vw, 56px); width: auto; flex-shrink: 0; margin-top: 2px; }
 h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.05; font-weight: 600; letter-spacing: 0; }
 #subtitle { color: var(--ink-2); margin-top: 6px; font-size: clamp(16px, 1.5vw, 20px); }
 .controls { display: flex; gap: 10px; flex-shrink: 0; }
