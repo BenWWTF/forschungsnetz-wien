@@ -81,7 +81,7 @@ nodes.forEach((n, i) => {
   const count = Math.max(1, Math.round(7 * Math.log2(own(n) + 1) / Math.log2(maxOwn + 1)));
   for (let j = 0; j < count; j++) {
     const k = i * 31 + j * 7, unit = o => new THREE.Vector3(seeded(k + o) - 0.5, seeded(k + o + 1) - 0.5, seeded(k + o + 2) - 0.5).normalize();
-    arcs.push({ i, lean: unit(1), twist: unit(5), rise: 1.9 + 0.9 * seeded(k + 9), span: 0.4 + 0.3 * seeded(k + 11),
+    arcs.push({ i, lean: unit(1), twist: unit(5), rise: 1.5 + 0.35 * seeded(k + 9), span: 0.2 + 0.16 * seeded(k + 11),   // low and narrow: a flare on the surface, not a ring around it
       from: new THREE.Vector3(), top: new THREE.Vector3(), to: new THREE.Vector3() });
   }
 });
@@ -194,12 +194,12 @@ function placeEdges() {
   });
   arcs.forEach((arc, k) => {
     const i = arc.i, p = cur[i], r = radiusNow(nodes[i]), hidden = em && !em.nodes.has(i) && !em.near.has(i);
-    const dir = tmpC.copy(outward[i]).addScaledVector(arc.lean, 1.1).normalize();          // where on the sphere the arc stands
+    const dir = tmpC.copy(outward[i]).addScaledVector(arc.lean, 0.8).normalize();          // where on the sphere the arc stands
     const side = tmpB.crossVectors(dir, arc.twist).normalize().multiplyScalar(arc.span);  // how far apart its two feet are
     arc.from.copy(dir).add(side).normalize().multiplyScalar(r).add(p);
     arc.to.copy(dir).sub(side).normalize().multiplyScalar(r).add(p);
     arc.top.copy(p).addScaledVector(dir, r * arc.rise);
-    const w = 0.035 * r + 0.1;
+    const w = 0.03 * r + 0.08;
     for (let s = 0; s < ASEG; s++) {
       bezier(arc.from, arc.top, arc.to, s / ASEG, tmpA); bezier(arc.from, arc.top, arc.to, (s + 1) / ASEG, tmpB);
       const len = tmpA.distanceTo(tmpB);
@@ -424,7 +424,7 @@ function renderPanel() {
     panel.innerHTML = `${close}<p class="kind">${t('kind')[n.type]}</p><h2>${esc(name)}</h2>
       ${name !== n.id ? `<p class="also">${t('short')} ${esc(n.id)}</p>` : ''}
       ${n.members.length ? `<p class="also">${t('members')} ${esc(n.members.join(', '))}</p>` : ''}
-      <p class="hero"><b>${num(n.count)}</b><span>${fill(t('heroUnit'), facts())}</span></p>
+      <p class="hero"><span>${fill(t('heroUnit'), facts())}</span><b>${num(n.count)}</b></p>
       <h3>${t('togetherTitle')}</h3>
       <div class="together"><i style="width:${pct}%"></i></div>
       <p class="note">${fill(t('togetherNote'), { n: `<b>${num(n.joint)}</b>`, pct })}${own(n) ? ' ' + fill(t('ringNote'), { n: num(own(n)) }) : ''}</p>
@@ -473,6 +473,7 @@ function applyTexts() {
   document.title = t('docTitle');
   $('lang').textContent = state.lang === 'de' ? 'English' : 'Deutsch';
   $('subtitle').textContent = fill(t('subtitle'), facts());
+  $('bandTrack').innerHTML = [0, 1].map(() => t('band').map(item => `<span>${fill(item, facts())}</span>`).join('')).join('');   // twice, for a seamless loop
   $('legendTopics').innerHTML = TOPIC_COLORS.map((c, d) => `<li>${dot(c)}${t('topics')[d]}</li>`).join('');
   $('aboutBody').innerHTML = aboutHtml(state.lang, { ...facts(), to: new Date(graph.to).toLocaleDateString(state.lang === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) });
   renderPanel();

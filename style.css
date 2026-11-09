@@ -14,6 +14,8 @@
   --none: #8a8a8a;
   --font: "Clash Grotesk", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   --edge: max(16px, env(safe-area-inset-left));
+  --band: 44px;   /* height of the running band along the bottom edge */
+  --foot: calc(max(16px, env(safe-area-inset-bottom)) + var(--band));
 }
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
@@ -48,7 +50,7 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.05; font-weight: 600; l
 .seg button { min-height: 38px; padding: 0 16px; border: 0; border-radius: 20px; background: none; font-weight: 600; cursor: pointer; color: var(--ink); }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 
-.legend { position: fixed; left: var(--edge); bottom: max(16px, env(safe-area-inset-bottom)); font-size: 15px; color: var(--ink-2); display: grid; gap: 5px; pointer-events: none; }
+.legend { position: fixed; left: var(--edge); bottom: var(--foot); font-size: 15px; color: var(--ink-2); display: grid; gap: 5px; pointer-events: none; }
 .legend li, .legend p { display: flex; align-items: center; gap: 9px; }
 .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
 .key-ball { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink-2); flex-shrink: 0; }
@@ -57,17 +59,23 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.05; font-weight: 600; l
 .legend p:first-of-type { margin-top: 6px; }
 .legend p { margin-top: -1px; }
 
+/* The running band of the Q. site ("Eröffnung 2027"), here carrying the headline figures. */
+.band { position: fixed; left: 0; right: 0; bottom: 0; height: var(--band); background: var(--accent); overflow: hidden; display: flex; align-items: center; pointer-events: none; }
+.band-track { display: flex; flex-shrink: 0; white-space: nowrap; font-size: 20px; font-weight: 500; animation: band 60s linear infinite; }
+.band-track span { padding: 0 44px; }
+@keyframes band { to { transform: translateX(-50%); } }
 .short { display: none; }
-.dock { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(16px, env(safe-area-inset-bottom)); display: flex; gap: 10px; }
+.dock { position: fixed; left: 50%; transform: translateX(-50%); bottom: var(--foot); display: flex; gap: 10px; }
 
-.panel { position: fixed; top: 104px; right: var(--edge); bottom: max(16px, env(safe-area-inset-bottom)); width: min(380px, calc(100vw - 32px)); background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px 22px 26px; overflow-y: auto; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); user-select: text; -webkit-user-select: text; }
+.panel { position: fixed; top: 104px; right: var(--edge); bottom: var(--foot); width: min(380px, calc(100vw - 32px)); background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 22px 22px 26px; overflow-y: auto; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); user-select: text; -webkit-user-select: text; }
 .panel[hidden], .tour[hidden], .dock[hidden], .legend[hidden] { display: none; }
 .panel .close { position: sticky; float: right; top: 0; margin: -8px -8px 0 8px; width: 48px; height: 48px; padding: 0; font-size: 26px; line-height: 1; }
 .kind { font-size: 14px; font-weight: 500; color: var(--accent-soft); text-transform: uppercase; letter-spacing: .1em; }
 .panel h2 { font-size: 28px; line-height: 1.1; font-weight: 600; margin: 4px 0 2px; }
 .panel .also { color: var(--ink-2); font-size: 15px; margin-top: 6px; }
-.hero { margin-top: 18px; }
-.hero b { display: block; font-size: 60px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* the site's "Key facts" pattern: a small label over a large figure, between hairlines */
+.hero { margin-top: 18px; padding: 12px 0 14px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.hero b { display: block; font-size: 60px; line-height: 1; font-weight: 500; margin-top: 4px; font-variant-numeric: tabular-nums; }
 .hero span { color: var(--ink-2); }
 .panel h3 { font-size: 18px; font-weight: 600; margin: 24px 0 10px; }
 .together { height: 14px; border-radius: 7px; background: rgba(255, 255, 255, .14); overflow: hidden; }
@@ -79,12 +87,12 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.05; font-weight: 600; l
 .mix-key { margin-top: 10px; display: grid; gap: 4px; font-size: 16px; }
 .mix-key li { display: grid; grid-template-columns: 14px 1fr auto; gap: 9px; align-items: center; }
 .mix-key .n { font-variant-numeric: tabular-nums; color: var(--ink-2); }
-.rows { display: grid; gap: 2px; margin: 0 -10px; }
-.row { display: grid; grid-template-columns: 14px 1fr auto; gap: 10px; align-items: center; width: 100%; min-height: 48px; padding: 6px 10px; border: 0; border-radius: 10px; background: none; text-align: left; cursor: pointer; }
+.rows { display: grid; border-top: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: 14px 1fr auto; gap: 10px; align-items: center; width: 100%; min-height: 48px; padding: 6px 6px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: none; text-align: left; cursor: pointer; }
 .row:hover { background: rgba(126, 96, 226, .35); }
 .row .n { font-weight: 600; font-variant-numeric: tabular-nums; }
 
-.tour { display: flex; flex-direction: column; position: fixed; left: 50%; transform: translateX(-50%); bottom: max(16px, env(safe-area-inset-bottom)); width: min(620px, calc(100vw - 32px)); background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px 24px 18px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.tour { display: flex; flex-direction: column; position: fixed; left: 50%; transform: translateX(-50%); bottom: var(--foot); width: min(620px, calc(100vw - 32px)); background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px 24px 18px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .tour-step { font-size: 14px; font-weight: 500; color: var(--accent-soft); text-transform: uppercase; letter-spacing: .1em; }
 .tour h2 { font-size: 30px; line-height: 1.1; font-weight: 600; margin: 4px 0 8px; }
 .tour #tourBody { font-size: 19px; overflow-y: auto; min-height: 0; }
@@ -93,7 +101,7 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.05; font-weight: 600; l
 .tour-nav { display: flex; gap: 10px; margin-top: 16px; flex-shrink: 0; }
 .tour-nav .quiet { margin-left: auto; }
 
-dialog { max-width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: #0e0e0e; color: var(--ink); border: 1px solid var(--line); border-radius: 18px; padding: 26px 28px 0; user-select: text; -webkit-user-select: text; }
+dialog { max-width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: #0e0e0e; color: var(--ink); border: 1px solid var(--line); border-radius: 20px; padding: 26px 28px 0; user-select: text; -webkit-user-select: text; }
 dialog::backdrop { background: rgba(0, 0, 0, .75); }
 dialog h2 { font-size: 30px; font-weight: 600; margin-bottom: 10px; }
 dialog h3 { font-size: 18px; font-weight: 600; margin: 18px 0 4px; }
@@ -106,6 +114,8 @@ dialog form { position: sticky; bottom: 0; margin-top: 12px; padding: 12px 0 18p
 
 /* Phone held upright: cards rise from the bottom edge, the bottom row shrinks to one line. */
 @media (max-width: 900px) and (orientation: portrait) {
+  :root { --band: 0px; }
+  .band { display: none; }
   body { font-size: 17px; }
   .top { flex-direction: column; gap: 10px; }
   .title { max-width: none; gap: 12px; }
@@ -131,6 +141,8 @@ dialog form { position: sticky; bottom: 0; margin-top: 12px; padding: 12px 0 18p
 }
 /* Phone on its side: too little height for a bottom card, so cards take the right edge. */
 @media (max-height: 520px) and (orientation: landscape) {
+  :root { --band: 0px; }
+  .band { display: none; }
   body { font-size: 16px; }
   .top { padding-top: max(10px, env(safe-area-inset-top)); }
   h1 { font-size: 22px; }
@@ -151,4 +163,4 @@ dialog form { position: sticky; bottom: 0; margin-top: 12px; padding: 12px 0 18p
   .tour-nav { flex-wrap: wrap; }
   body.busy .dock, body.busy .controls, body.busy .legend { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .lbl { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .lbl { transition: none; } .band-track { animation: none; } }
