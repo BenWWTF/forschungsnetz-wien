@@ -52,8 +52,8 @@ export const TOUR = [
     de: { title: 'Große Kugel, viele Veröffentlichungen', body: ['Wer etwas Neues herausfindet, schreibt es auf, damit andere es nachlesen und überprüfen können. Das nennt man eine Veröffentlichung.', 'Je mehr Veröffentlichungen ein Ort seit {since} hat, desto größer ist seine Kugel. Die größte gehört zu „{big}“: {bigCount}.'] },
     en: { title: 'Big sphere, many publications', body: ['When researchers find out something new, they write it down so that others can read and check it. That is called a publication.', 'The more publications a place has had since {since}, the bigger its sphere. The biggest one belongs to “{big}”: {bigCount}.'] } },
   { show: 'pair',
-    de: { title: 'Eine Linie heißt: gemeinsam geforscht', body: ['Forschung ist Teamarbeit. Eine Linie verbindet zwei Orte, wenn Menschen von beiden zusammen etwas veröffentlicht haben. Je dicker die Linie, desto öfter.', 'Die dickste Linie verbindet „{pairA}“ und „{pairB}“: {pairCount} gemeinsame Veröffentlichungen.'] },
-    en: { title: 'A line means: researched together', body: ['Research is teamwork. A line joins two places when people from both have published something together. The thicker the line, the more often.', 'The thickest line joins “{pairA}” and “{pairB}”: {pairCount} joint publications.'] } },
+    de: { title: 'Eine Linie heißt: gemeinsam geforscht', body: ['Forschung ist Teamarbeit. Eine Linie verbindet zwei Orte, wenn Menschen von beiden zusammen etwas veröffentlicht haben. Je dicker und heller die Linie, desto öfter.', 'Die dickste Linie verbindet „{pairA}“ und „{pairB}“: {pairCount} gemeinsame Veröffentlichungen.'] },
+    en: { title: 'A line means: researched together', body: ['Research is teamwork. A line joins two places when people from both have published something together. The thicker and brighter the line, the more often.', 'The thickest line joins “{pairA}” and “{pairB}”: {pairCount} joint publications.'] } },
   { show: 'topics',
     de: { title: 'Die Farbe zeigt das Thema', body: ['Jede Kugel hat die Farbe des Themas, zu dem dort am meisten veröffentlicht wird. Viele Orte forschen aber an mehreren Themen. Tippe später auf eine Kugel, dann siehst du die ganze Mischung.'] },
     en: { title: 'Colour shows the topic', body: ['Each sphere has the colour of the topic it publishes on most. Many places work on several topics, though. Tap a sphere later to see the whole mix.'] } },
@@ -76,7 +76,7 @@ export function aboutHtml(lang, f) {
     <ul><li>Eine Linie zählt nur, wenn zwei verschiedene Menschen an den beiden Orten arbeiten. Eine Person mit zwei Arbeitgebern ist keine Zusammenarbeit.</li>
     <li>Das Volumen einer Kugel wächst mit der Zahl der Veröffentlichungen, die Dicke einer Linie mit der Zahl der gemeinsamen.</li>
     <li>Dachorganisationen sind zu einer Kugel zusammengefasst und stehen im Stadtplan an ihrem Hauptsitz.</li>
-    <li>Im Netz stehen eng verbundene Orte näher beisammen. Die Lage im Raum hat sonst keine Bedeutung.</li></ul>
+    <li>Im Netz sitzen alle Orte auf der Oberfläche einer Kugel, eng verbundene näher beisammen. Die Lage hat sonst keine Bedeutung.</li></ul>
     <h3>Quellen</h3>
     <p>Forschungsdaten: ${radar} (WWTF), ${link('https://openalex.org', 'OpenAlex')}. Bezirksgrenzen und Gewässer: ${link('https://data.wien.gv.at', 'Stadt Wien, data.wien.gv.at')} (CC BY 4.0). Adressen verortet mit Daten von ${link('https://www.openstreetmap.org/copyright', '© OpenStreetMap-Mitwirkenden')}.</p>`;
   return `<h2>About the network</h2>
@@ -87,7 +87,7 @@ export function aboutHtml(lang, f) {
     <ul><li>A line only counts when two different people work at the two places. One person with two employers is not a collaboration.</li>
     <li>The volume of a sphere grows with the number of publications, the thickness of a line with the number of joint ones.</li>
     <li>Umbrella organisations are merged into one sphere and sit at their head office on the city map.</li>
-    <li>In the network, closely linked places sit closer together. Position in space has no other meaning.</li></ul>
+    <li>In the network, all places sit on the surface of a sphere, closely linked ones nearer to each other. Position has no other meaning.</li></ul>
     <h3>Sources</h3>
     <p>Research data: ${radar} (WWTF), ${link('https://openalex.org', 'OpenAlex')}. District borders and waters: ${link('https://data.wien.gv.at', 'City of Vienna, data.wien.gv.at')} (CC BY 4.0). Addresses located with data from ${link('https://www.openstreetmap.org/copyright', '© OpenStreetMap contributors')}.</p>`;
 }

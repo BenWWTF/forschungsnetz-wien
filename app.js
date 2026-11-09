@@ -5,10 +5,10 @@ import { STRINGS, TOUR, aboutHtml } from './texts.js';
 const TOPIC_COLORS = ['#2f6fd0', '#35b58a', '#b8336a', '#f2c94c'];   // physical, life, health, social (validated for colour-vision deficiencies)
 const NO_TOPIC = '#7d8aa5';
 const BG = new THREE.Color('#000000');
-const EDGE_BASE = new THREE.Color('#7e60e2'), EDGE_ON = new THREE.Color('#ffffff');
+const EDGE_WEAK = new THREE.Color('#33266b'), EDGE_STRONG = new THREE.Color('#d9cfff'), EDGE_ON = new THREE.Color('#ffffff');
 const SEG = 10;                 // cylinder pieces per line, so lines can arch in the city view
 const IDLE_MS = (+new URLSearchParams(location.search).get('idle') || 90) * 1000;   // ?idle=30 sets the seconds until the exhibit resets itself
-const HOME = { net: { pos: [0, 30, 172], target: [0, 0, 0] }, city: { pos: [0, 100, 150], target: [0, 0, 8] } };
+const HOME = { net: { pos: [0, 45, 262], target: [0, -6, 0] }, city: { pos: [0, 100, 150], target: [0, 0, 8] } };
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -34,7 +34,7 @@ const state = { lang: 'de', view: 'net', mix: 0, selected: null, hovered: null, 
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 const scene = new THREE.Scene();
 scene.background = BG;
-scene.fog = new THREE.Fog(BG, 170, 460);
+scene.fog = new THREE.Fog(BG, 200, 520);
 const camera = new THREE.PerspectiveCamera(42, 1, 1, 1200);
 camera.position.set(...HOME.net.pos);
 scene.add(camera, new THREE.AmbientLight(0xffffff, 1.5));
@@ -43,7 +43,7 @@ lamp.position.set(-0.5, 0.8, 1);
 camera.add(lamp);   // light travels with the viewer, so no sphere is ever in the dark
 
 const controls = new OrbitControls(camera, renderer.domElement);
-Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, enablePan: false, minDistance: 35, maxDistance: 330, autoRotate: !calm, autoRotateSpeed: 0.5 });
+Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, enablePan: false, minDistance: 35, maxDistance: 380, autoRotate: !calm, autoRotateSpeed: 0.5 });
 
 const ball = new THREE.SphereGeometry(1, 40, 28);
 const cur = nodes.map(n => new THREE.Vector3(...n.net));
@@ -56,7 +56,7 @@ const meshes = nodes.map(n => {
 });
 
 const edgeMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 6, 1, true),
-  new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.6, depthWrite: false }), edges.length * SEG);
+  new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false }), edges.length * SEG);
 edgeMesh.frustumCulled = false;
 edgeMesh.renderOrder = 2;   // after the ghost spheres
 scene.add(edgeMesh);
@@ -106,7 +106,9 @@ function buildMap() {
 // ── positions, lines, highlight ────────────────────────────────────────────────────────────
 const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 const UP = new THREE.Vector3(0, 1, 0), tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), tmpC = new THREE.Vector3();
-const dummy = new THREE.Object3D();
+const dummy = new THREE.Object3D(), tmpColor = new THREE.Color();
+const maxJoint = Math.max(...edges.map(e => e.n));
+const strength = e => Math.log2(e.n + 1) / Math.log2(maxJoint + 1);   // 0…1
 const radiusNow = n => n.r * (1 - (1 - graph.cityScale) * state.mix);
 
 function placeNodes() {
@@ -132,7 +134,7 @@ function placeEdges() {
     const lift = (a.distanceTo(b) * 0.3 + 2) * t;                       // arch over the city, straight in the network
     const ctrl = tmpC.addVectors(a, b).multiplyScalar(0.5); ctrl.y += lift;
     const hidden = em && !em.edge(e);   // lines outside the focus vanish
-    const w = (0.07 + 0.1 * Math.log2(e.n + 1)) * (1 - 0.45 * t);
+    const w = (0.06 + 0.85 * Math.pow(strength(e), 1.6)) * (1 - 0.45 * t);
     const at = (u, out) => out.copy(a).multiplyScalar((1 - u) * (1 - u)).addScaledVector(ctrl, 2 * u * (1 - u)).addScaledVector(b, u * u);
     for (let s = 0; s < SEG; s++) {
       at(s / SEG, tmpA); at((s + 1) / SEG, tmpB);
@@ -145,7 +147,7 @@ function placeEdges() {
     }
   });
   edgeMesh.instanceMatrix.needsUpdate = true;
-  edgeMesh.material.opacity = em ? 0.75 : 0.6 - 0.3 * t;   // over the map the arcs step back until a place is chosen
+  edgeMesh.material.opacity = em ? 0.9 : 0.85 - 0.45 * t;   // over the map the arcs step back until a place is chosen
 }
 
 /* emph: null, or { nodes: Set (lit), near: Set (lit), edge: e => bool }. Everything else recedes. */
@@ -159,7 +161,9 @@ function paint() {
     m.emissiveIntensity = em && em.nodes.has(i) ? 0.6 : 0.35;
   });
   edges.forEach((e, k) => {
-    for (let s = 0; s < SEG; s++) edgeMesh.setColorAt(k * SEG + s, em ? EDGE_ON : EDGE_BASE);
+    // on black, a darker line reads as a fainter one: one-off partnerships recede, close ones shine
+    const c = em ? EDGE_ON : tmpColor.copy(EDGE_WEAK).lerp(EDGE_STRONG, strength(e));
+    for (let s = 0; s < SEG; s++) edgeMesh.setColorAt(k * SEG + s, c);
   });
   edgeMesh.instanceColor.needsUpdate = true;
   placeEdges();
@@ -384,7 +388,7 @@ function resetIfIdle(now) {
   if (now - lastInput < IDLE_MS) return;
   lastInput = now;
   const touched = state.tour !== null || state.selected !== null || state.list || state.view !== 'net' || $('about').open
-    || camera.position.distanceTo(tmpA.set(...HOME.net.pos)) > 260;
+    || camera.position.distanceTo(tmpA.set(...HOME.net.pos)) > 150;
   if (!touched) return;
   $('about').close();
   if (state.tour !== null) showTour(null); else { setView('net'); select(null); }

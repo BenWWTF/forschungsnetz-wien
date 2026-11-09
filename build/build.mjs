@@ -56,7 +56,7 @@ const maxCount = Math.max(...graph.nodes.map(n => n.count));
 const nodes = graph.nodes.sort((a, b) => b.count - a.count).map(n => ({
   id: n.id, ...meta[n.id], addr: undefined, count: n.count, joint: n.joint, dom: domainsOf[n.id],
   members: RC.labelsOfGroup(n.id, true, papers).filter(l => l !== n.id).sort(),
-  r: Math.max(1.3, 7.5 * Math.cbrt(n.count / maxCount)),   // volume, not radius, grows with the count
+  r: Math.max(1.3, 6.5 * Math.cbrt(n.count / maxCount)),   // volume, not radius, grows with the count
 }));
 const index = Object.fromEntries(nodes.map((n, i) => [n.id, i]));
 const edges = graph.edges.map(e => ({ a: index[e.source], b: index[e.target], n: e.count })).sort((x, y) => y.n - x.n);
@@ -101,14 +101,25 @@ function layoutNetwork(nodes, edges) {
       pos[i][c] += vel[i][c] * 0.5; vel[i][c] *= 0.6;
     }
   }
-  // scale by the median distance from the centre, then pull the few far-flung nodes back in:
-  // sizing by the outermost node would leave the core a tight, unreadable knot
-  const dist = pos.map(p => Math.hypot(...p)), median = [...dist].sort((a, b) => a - b)[N >> 1];
-  pos.forEach((p, i) => {
-    const d = dist[i] * 46 / median, f = (d > 62 ? 62 + (d - 62) * 0.3 : d) / dist[i];
-    for (let c = 0; c < 3; c++) p[c] *= f;
-  });
-  separate(pos, nodes.map(n => n.r), 6, [0, 1, 2]);
+  /* The force layout alone gives a ball with the big institutions packed in its core and the
+     small ones sticking out on single lines. So it only decides who sits near whom; every node
+     is then moved onto the surface of one sphere and spread out there. The lines become chords
+     through the inside, none is hidden in a core, and every sphere can be reached from outside. */
+  const R = 64, onShell = p => { const l = Math.hypot(...p) || 1; for (let c = 0; c < 3; c++) p[c] *= R / l; };
+  pos.forEach(onShell);
+  for (let s = 0; s < 500; s++) {
+    const alpha = 1 - s / 500, move = nodes.map(() => [0, 0, 0]);
+    for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+      const d = sub(pos[j], pos[i]), len = Math.hypot(...d) || 0.01;
+      const f = 60 * (nodes[i].r + nodes[j].r + 6) / (len * len);   // big spheres claim more room
+      for (let c = 0; c < 3; c++) { move[i][c] -= d[c] / len * f; move[j][c] += d[c] / len * f; }
+    }
+    for (const e of edges) {   // partners stay in the same region of the sphere
+      const d = sub(pos[e.b], pos[e.a]), f = 0.004 * Math.log2(e.n + 1);
+      for (let c = 0; c < 3; c++) { move[e.a][c] += d[c] * f; move[e.b][c] -= d[c] * f; }
+    }
+    pos.forEach((p, i) => { for (let c = 0; c < 3; c++) p[c] += move[i][c] * alpha; onShell(p); });
+  }
   nodes.forEach((n, i) => { n.net = pos[i]; });
 }
 
