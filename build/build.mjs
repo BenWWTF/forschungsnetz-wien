@@ -66,10 +66,19 @@ layoutNetwork(nodes, edges);
 layoutCity(nodes);
 
 const dates = papers.map(p => p.Date).sort();
+/* Publications in a typical week: the median of the weekly counts (weeks start on Monday). The median,
+   because the dataset has a few nearly empty weeks from collection gaps that would drag an average down. */
+const weekly = {};
+for (const p of papers) {
+  const d = new Date(p.Date + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7);
+  const monday = d.toISOString().slice(0, 10); weekly[monday] = (weekly[monday] || 0) + 1;
+}
+const counts = Object.values(weekly).sort((x, y) => x - y);
+const perWeek = Math.round(counts[counts.length >> 1] / 10) * 10;
 const round = v => Math.round(v * 100) / 100;
 fs.mkdirSync(path.join(ROOT, 'data'), { recursive: true });
 fs.writeFileSync(path.join(ROOT, 'data', 'graph.json'), JSON.stringify({
-  from: dates[0], to: dates.at(-1), total: graph.total, joint: graph.jointAll, cityScale: CITY_SCALE,
+  from: dates[0], to: dates.at(-1), total: graph.total, joint: graph.jointAll, perWeek, cityScale: CITY_SCALE,
   nodes: nodes.map(n => ({ ...n, r: round(n.r), net: n.net.map(round), city: n.city.map(round) })),
   edges,
 }));

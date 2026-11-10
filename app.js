@@ -481,7 +481,7 @@ const facts = () => {
   const big = nodes[0], pair = edges[0];
   return { places: nodes.length, pairs: edges.length, since: since(), big: esc(big.id), bigCount: num(big.count),
     pairA: esc(nodes[pair.a].id), pairB: esc(nodes[pair.b].id), pairCount: num(pair.n),
-    total: num(graph.total), joint: num(graph.joint), share: Math.round(100 * graph.joint / graph.total) };
+    total: num(graph.total), joint: num(graph.joint), week: num(graph.perWeek), share: Math.round(100 * graph.joint / graph.total) };
 };
 
 let toastTimer = null;
