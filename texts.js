@@ -68,7 +68,7 @@ export const STRINGS = {
 const svg = body => `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 export const EGGS = [
   { id: 'scissors', node: 'Vienna BioCenter', keys: ['schere', 'crispr', 'scissors', 'charpentier', 'gen'],
-    icon: svg('<circle cx="13" cy="37" r="6"/><circle cx="35" cy="37" r="6"/><path d="M17 32 36 9M31 32 12 9"/><circle cx="24" cy="6" r="3" fill="currentColor" stroke="none"/><path d="M24 10v8M24 18l-5 6M24 18l5 6M19 13h10"/>'),
+    icon: svg('<circle cx="13" cy="41" r="5"/><circle cx="35" cy="41" r="5"/><path d="M16 37 31 20M32 37 17 20"/><g stroke-width="1.7"><path d="M3 4c7 0 7 11 14 11S24 4 31 4s7 11 14 11"/><path d="M3 15c7 0 7-11 14-11s7 11 14 11S38 4 45 4"/><path d="M7.5 6.5v6M12.5 6.5v6M35.5 6.5v6M40.5 6.5v6"/></g>'),
     de: { title: 'Die Genschere', text: ['Emmanuelle Charpentier forschte von 2002 bis 2009 in Wien, an den Max Perutz Labs. Hier fand ihr Team einen wichtigen Baustein der Genschere CRISPR. Mit ihr lässt sich Erbgut ganz gezielt schneiden.', '2020 bekam sie dafür den Nobelpreis für Chemie, gemeinsam mit Jennifer Doudna.'] },
     en: { title: 'The gene scissors', text: ['Emmanuelle Charpentier did research in Vienna from 2002 to 2009, at the Max Perutz Labs. Here her team found a key part of the gene scissors CRISPR, a tool that cuts genetic material at exactly the chosen spot.', 'In 2020 she received the Nobel Prize in Chemistry for it, together with Jennifer Doudna.'] } },
   { id: 'clock', node: 'TU Wien', keys: ['uhr', 'atomuhr', 'kernuhr', 'clock', 'schumm', 'thorium'],
