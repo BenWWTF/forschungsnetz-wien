@@ -19,8 +19,9 @@ them to roles and `app.js` reads its colours from there.
 
 ## Hidden things
 
-Five easter eggs sit next to their spheres and appear when a visitor opens that place (`EGGS` in `texts.js`: icon,
-place, story, search words). The city map marks the Q. itself; with `?kiosk` the marker reads "Du bist hier".
+Easter eggs sit next to their spheres and appear when a visitor opens that place (`EGGS` in `texts.js`: icon,
+place, story, search words, stage). Four are there from the start; a fifth appears once those are found, and a last
+one then opens at the Q. on the city map. The city map marks the Q. itself; with `?kiosk` the marker reads "Du bist hier".
 
 ## Updating the data
 

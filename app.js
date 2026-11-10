@@ -351,8 +351,12 @@ const hereTop = new THREE.Vector3(wien.q[0], 5.4, wien.q[1]);
 const screen = nodes.map(() => ({ x: 0, y: 0, r: 0, depth: 0, visible: false }));
 
 /* Easter eggs: a button beside its sphere, shown once the camera is close to that place. */
-const eggs = EGGS.map(e => ({ ...e, i: nodes.findIndex(n => n.id === e.node) })).filter(e => e.i >= 0);
+/* Eggs come in stages: the next stage only exists once everything before it has been found.
+   Most sit beside a sphere; the very last one sits at the Q. on the city map. */
+const eggs = EGGS.map(e => ({ ...e, i: nodes.findIndex(n => n.id === e.node) })).filter(e => e.i >= 0 || e.at === 'q');
 const found = new Set();
+const unlocked = egg => eggs.every((other, k) => other.stage >= egg.stage || found.has(k));
+const inPlay = () => eggs.filter(unlocked).length;
 eggs.forEach((egg, k) => {
   egg.el = document.createElement('button'); egg.el.type = 'button'; egg.el.className = 'egg'; egg.el.hidden = true; egg.el.innerHTML = egg.icon;
   egg.el.onclick = () => openEgg(k);
@@ -364,13 +368,20 @@ function placeEggs() {
   const free = (x, y) => x >= 4 && x <= W - 52 && y >= (upright.matches ? 134 : 100) && y <= H - 64 && !(card && x + 48 > card.left && y + 48 > card.top && x < card.right)
     && !taken.some(([tx, ty]) => Math.abs(tx - x) < 56 && Math.abs(ty - y) < 56);
   for (const egg of eggs) {
-    const s = screen[egg.i], d = s.r * 0.75 + 4;
-    // shown for the place a visitor has opened, or when the camera has come close on its own
-    const near = s.visible && state.tour === null && (em ? em.nodes.has(egg.i) : camera.position.distanceTo(cur[egg.i]) < 110);
-    const spot = near && [[d, -d - 48], [-d - 48, -d - 48], [d, d], [-d - 48, d]].map(([dx, dy]) => [s.x + dx, s.y + dy]).find(([x, y]) => free(x, y));   // a corner of the sphere that is not covered
+    let spot = null;
+    if (!unlocked(egg) || state.tour !== null) spot = null;
+    else if (egg.at === 'q') {   // beside the marker of the Q., whenever the city map is up
+      tmpA.copy(hereTop).project(camera);
+      const x = (tmpA.x + 1) / 2 * W, y = (1 - tmpA.y) / 2 * H;
+      if (state.mix > 0.6 && tmpA.z < 1) spot = [[-24, 6], [30, -24], [-78, -24]].map(([dx, dy]) => [x + dx, y + dy]).find(([sx, sy]) => free(sx, sy)) ?? null;
+    } else {
+      const s = screen[egg.i], d = s.r * 0.75 + 4;
+      // shown for the place a visitor has opened, or when the camera has come close on its own
+      const near = s.visible && (em ? em.nodes.has(egg.i) : camera.position.distanceTo(cur[egg.i]) < 110);
+      if (near) spot = [[d, -d - 48], [-d - 48, -d - 48], [d, d], [-d - 48, d]].map(([dx, dy]) => [s.x + dx, s.y + dy]).find(([x, y]) => free(x, y)) ?? null;   // a corner of the sphere that is not covered
+    }
     egg.el.hidden = !spot;
-    if (spot) taken.push(spot);
-    if (spot) egg.el.style.transform = `translate(${Math.round(spot[0])}px,${Math.round(spot[1])}px)`;
+    if (spot) { taken.push(spot); egg.el.style.transform = `translate(${Math.round(spot[0])}px,${Math.round(spot[1])}px)`; }
   }
 }
 let W = 1, H = 1;
@@ -495,23 +506,42 @@ function toast(text, ms) {
 
 function showFound() {
   const el = $('foundCount'); el.hidden = !found.size;
-  el.textContent = '★ ' + fill(t('eggCount'), { n: found.size, all: eggs.length });
+  el.textContent = '★ ' + fill(t('eggCount'), { n: found.size, all: inPlay() });
   eggs.forEach((egg, k) => { egg.el.classList.toggle('done', found.has(k)); egg.el.setAttribute('aria-label', `${t('eggLabel')}: ${egg[state.lang].title}`); });
 }
 function openEgg(k) {
-  const egg = eggs[k]; found.add(k); showFound();
-  $('eggBody').innerHTML = `<p><span class="tag">${fill(t('eggFound'), { n: found.size, all: eggs.length })}</span></p><div class="art">${egg.icon}</div>
-    <h2>${egg[state.lang].title}</h2>${egg[state.lang].text.map(p => `<p>${p}</p>`).join('')}${found.size === eggs.length ? `<p class="all">${t('eggAll')}</p>` : ''}`;
+  const egg = eggs[k], before = inPlay(), wasNew = !found.has(k);
+  found.add(k); showFound();
+  // finishing a stage brings the next one into play; the card says where to look
+  const opened = wasNew && inPlay() > before ? eggs.find((o, j) => unlocked(o) && !found.has(j)) : null;
+  const more = opened ? `<p class="all">${t(opened.at === 'q' ? (document.body.classList.contains('kiosk') ? 'eggNextHere' : 'eggNextQ') : 'eggNext').replace('{place}', opened.i >= 0 ? esc(nodes[opened.i].id) : '')}</p>` : '';
+  $('eggBody').innerHTML = `<p><span class="tag">${egg.at === 'q' ? t('eggLast') : fill(t('eggFound'), { n: found.size, all: before })}</span></p><div class="art">${egg.icon}</div>
+    <h2>${egg[state.lang].title}</h2>${egg[state.lang].text.map(p => `<p>${p}</p>`).join('')}${more}`;
+  if (wasNew && found.size === eggs.length) partyPending = true;
   if (!$('egg').open) $('egg').showModal();
 }
+/* Everything found: when the last card closes, the lines light up in Lime, one after the other. */
+let partyPending = false, partyUntil = 0;
+$('egg').addEventListener('close', () => { if (partyPending) { partyPending = false; if (!still) partyUntil = performance.now() + 4500; } });
+const LIME = new THREE.Color(css('--q-lime'));
+function sparkle(now) {
+  if (now > partyUntil || state.emph) { partyUntil = 0; paint(); return; }
+  edges.forEach((e, k) => {
+    const wave = 0.5 + 0.5 * Math.sin(now * 0.007 - k * 0.3);
+    tmpColor.copy(LINE).lerp(LIME, wave).multiplyScalar(0.25 + 0.75 * wave);
+    for (let s = 0; s < SEG; s++) edgeMesh.setColorAt(k * SEG + s, tmpColor);
+  });
+  edgeMesh.instanceColor.needsUpdate = true;
+}
+
 /* Five quick taps on the Q. give away where something is still hidden. */
 let logoTaps = [];
 document.querySelector('.mark').addEventListener('click', () => {
   const now = performance.now(); logoTaps = [...logoTaps.filter(x => now - x < 3000), now];
   if (logoTaps.length < 5) return;
   logoTaps = [];
-  const next = eggs.find((_, k) => !found.has(k));
-  toast(next ? fill(t('eggHint'), { place: nodes[next.i].id }) : t('eggAll'), 5000);
+  const next = eggs.find((egg, k) => unlocked(egg) && !found.has(k));
+  toast(!next ? t('eggAll') : next.at === 'q' ? t('eggHintQ') : fill(t('eggHint'), { place: nodes[next.i].id }), 5000);
 });
 
 let opener = null;   // what had focus before a card opened, to hand it back on closing
@@ -560,7 +590,7 @@ function renderPanel(takeFocus = false) {
   if (filter) filter.oninput = () => {
     const q = filter.value.trim().toLowerCase(); let any = false;
     panel.querySelectorAll('.row[data-node]').forEach(row => { const n = nodes[+row.dataset.node], show = !q || [n.id, n.name, n.en].some(x => x.toLowerCase().includes(q)); row.hidden = !show; any ||= show; });
-    const egg = q.length >= 3 ? eggs.findIndex(e => e.keys.some(key => key.startsWith(q) || q.includes(key))) : -1;   // a few words open a hidden door
+    const egg = q.length >= 3 ? eggs.findIndex(e => unlocked(e) && e.keys.some(key => key.startsWith(q) || q.includes(key))) : -1;   // a few words open a hidden door
     panel.querySelector('.egg-row')?.remove();
     if (egg >= 0) { const row = document.createElement('button'); row.type = 'button'; row.className = 'row egg-row'; row.textContent = t('eggRow'); row.onclick = () => openEgg(egg); panel.querySelector('.rows').prepend(row); }
     $('noMatch').hidden = any || egg >= 0;
@@ -647,7 +677,7 @@ function resetIfIdle(now) {
   if (idle < IDLE_MS) { warned = true; toast(fill(t('idleNote'), { s: Math.ceil((IDLE_MS - idle) / 1000) })); return; }
   lastInput = now; warned = false; toast(null);
   $('about').close(); $('egg').close();
-  found.clear(); showFound();
+  found.clear(); partyPending = false; showFound();
   document.body.classList.remove('used');
   if (state.lang !== 'de') { state.lang = 'de'; applyTexts(); }
   if (state.tour !== null) showTour(null); else { setView('net'); if (state.selected !== null || state.list) select(null); else flyHome(); }
@@ -672,6 +702,7 @@ function frame(now) {
     if (u === 1) mixing = null;
   }
   if (mixing || !still || !placed) { placeNodes(now); moveFlecks(now); placed = true; }
+  if (partyUntil) sparkle(now);
   if (flight) {
     const u = Math.min(1, (now - flight.start) / flight.ms), k = ease(u);
     camera.position.lerpVectors(flight.p0, flight.p1, k);
