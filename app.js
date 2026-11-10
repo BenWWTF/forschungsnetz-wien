@@ -360,13 +360,16 @@ eggs.forEach((egg, k) => {
 });
 function placeEggs() {
   const em = state.emph, card = $('panel').hidden ? null : $('panel').getBoundingClientRect();
-  const free = (x, y) => x >= 4 && x <= W - 52 && y >= 100 && y <= H - 64 && !(card && x + 48 > card.left && y + 48 > card.top && x < card.right);
+  const taken = [];   // two eggs at one place take different corners
+  const free = (x, y) => x >= 4 && x <= W - 52 && y >= (upright.matches ? 134 : 100) && y <= H - 64 && !(card && x + 48 > card.left && y + 48 > card.top && x < card.right)
+    && !taken.some(([tx, ty]) => Math.abs(tx - x) < 56 && Math.abs(ty - y) < 56);
   for (const egg of eggs) {
     const s = screen[egg.i], d = s.r * 0.75 + 4;
     // shown for the place a visitor has opened, or when the camera has come close on its own
     const near = s.visible && state.tour === null && (em ? em.nodes.has(egg.i) : camera.position.distanceTo(cur[egg.i]) < 110);
     const spot = near && [[d, -d - 48], [-d - 48, -d - 48], [d, d], [-d - 48, d]].map(([dx, dy]) => [s.x + dx, s.y + dy]).find(([x, y]) => free(x, y));   // a corner of the sphere that is not covered
     egg.el.hidden = !spot;
+    if (spot) taken.push(spot);
     if (spot) egg.el.style.transform = `translate(${Math.round(spot[0])}px,${Math.round(spot[1])}px)`;
   }
 }
