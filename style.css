@@ -77,8 +77,6 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.02; }
 .band-track { display: flex; flex-shrink: 0; white-space: nowrap; font: 600 20px var(--q-font-headline); animation: band 60s linear infinite; }
 .band-track span { padding: 0 44px; }
 @keyframes band { to { transform: translateX(-50%); } }
-/* "you are here" on the city map */
-.lbl.here { padding: 3px 12px 3px 10px; border-radius: var(--q-radius-tail); background: var(--q-lime); color: var(--q-black); font-size: 15px; font-weight: 600; text-shadow: none; }
 /* easter eggs: a small object beside a sphere, shown once the visitor is close */
 #eggs { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
 .egg { position: absolute; left: 0; top: 0; width: 48px; height: 48px; padding: 9px; border: 2px solid var(--q-black); border-radius: 50%; background: var(--q-white); color: var(--q-black); cursor: pointer; pointer-events: auto; animation: egg 2.4s ease-in-out infinite; }

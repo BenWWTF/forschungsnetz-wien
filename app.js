@@ -44,7 +44,7 @@ edges.forEach(e => { nodes[e.a].links.push({ other: e.b, n: e.n }); nodes[e.b].l
 nodes.forEach(n => n.links.sort((x, y) => y.n - x.n));
 const own = n => n.count - n.joint;   // published without another Vienna institution: drawn as small arcs that leave the sphere and fall back to it
 
-if (new URLSearchParams(location.search).has('kiosk')) document.body.classList.add('kiosk');   // wall screen: every control within a child's reach, and the marker may say "you are here"
+if (new URLSearchParams(location.search).has('kiosk')) document.body.classList.add('kiosk');   // wall screen: every control within a child's reach
 const state = { lang: 'de', view: 'net', mix: 0, selected: null, hovered: null, tour: null, list: false, emph: null };
 
 // ── scene ──────────────────────────────────────────────────────────────────────────────────
@@ -134,10 +134,6 @@ scene.add(stalks);
 const map = buildMap();
 scene.add(map.group);
 
-/* The Q. itself on the city map: a Lime pin where the exhibition stands. */
-const herePin = new THREE.Mesh(new THREE.ConeGeometry(1.4, 5, 24), new THREE.MeshBasicMaterial({ color: css('--q-lime'), transparent: true, opacity: 0 }));
-herePin.rotation.x = Math.PI; herePin.position.set(wien.q[0], 2.5, wien.q[1]); herePin.visible = false;
-scene.add(herePin);
 
 function buildMap() {
   const group = new THREE.Group(), fades = [];
@@ -195,7 +191,6 @@ function placeNodes(time) {
   at.needsUpdate = true;
   stalks.material.opacity = 0.55 * t * t; stalks.visible = t > 0.01;
   map.fade(t);
-  herePin.visible = t > 0.01; herePin.material.opacity = t;
   placeEdges();
 }
 
@@ -346,8 +341,7 @@ function setView(view) {
 const labelBox = $('labels');
 const labels = nodes.map(n => { const el = document.createElement('div'); el.className = 'lbl'; el.textContent = n.id; labelBox.append(el); return { el, w: 0, h: 0 }; });
 const districtLabels = wien.districts.map(d => { const el = document.createElement('div'); el.className = 'lbl district'; el.textContent = d.nr + '.'; labelBox.append(el); return { el, at: new THREE.Vector3(d.at[0], 0, d.at[1]) }; });
-const hereLabel = document.createElement('div'); hereLabel.className = 'lbl here'; labelBox.append(hereLabel);
-const hereTop = new THREE.Vector3(wien.q[0], 5.4, wien.q[1]);
+const qSite = new THREE.Vector3(wien.q[0], 1.5, wien.q[1]);   // the Q. on the city map, where the last egg waits
 const screen = nodes.map(() => ({ x: 0, y: 0, r: 0, depth: 0, visible: false }));
 
 /* Easter eggs: a button beside its sphere, shown once the camera is close to that place. */
@@ -371,9 +365,9 @@ function placeEggs() {
     let spot = null;
     if (!unlocked(egg) || state.tour !== null) spot = null;
     else if (egg.at === 'q') {   // beside the marker of the Q., whenever the city map is up
-      tmpA.copy(hereTop).project(camera);
+      tmpA.copy(qSite).project(camera);
       const x = (tmpA.x + 1) / 2 * W, y = (1 - tmpA.y) / 2 * H;
-      if (state.mix > 0.6 && tmpA.z < 1) spot = [[-24, 6], [30, -24], [-78, -24]].map(([dx, dy]) => [x + dx, y + dy]).find(([sx, sy]) => free(sx, sy)) ?? null;
+      if (state.mix > 0.6 && tmpA.z < 1) spot = [[-24, -24], [30, -24], [-78, -24]].map(([dx, dy]) => [x + dx, y + dy]).find(([sx, sy]) => free(sx, sy)) ?? null;
     } else {
       const s = screen[egg.i], d = s.r * 0.75 + 4;
       // shown for the place a visitor has opened, or when the camera has come close on its own
@@ -418,10 +412,6 @@ function drawLabels() {
     l.el.classList.toggle('dark', inside && nodes[i].light);
   }
   labels.forEach((l, i) => l.el.classList.toggle('on', shown.has(i)));
-  tmpA.copy(hereTop).project(camera);
-  const hereOn = state.mix > 0.6 && tmpA.z < 1;
-  hereLabel.classList.toggle('on', hereOn);
-  if (hereOn) hereLabel.style.transform = `translate(${Math.round((tmpA.x + 1) / 2 * W - hereLabel.offsetWidth / 2)}px,${Math.round((1 - tmpA.y) / 2 * H - hereLabel.offsetHeight - 2)}px)`;
   placeEggs();
   const districtsOn = state.mix > 0.6;
   for (const d of districtLabels) {
@@ -635,7 +625,6 @@ function applyTexts() {
   $('subtitle').textContent = fill(t('subtitle'), facts());
   $('bandTrack').innerHTML = [0, 1].map(() => t('band').map(item => `<span>${fill(item, facts())}</span>`).join('')).join('');   // twice, for a seamless loop
   $('legendTopics').innerHTML = TOPIC_COLORS.map((c, d) => `<li>${dot(c)}${t('topics')[d]}</li>`).join('');
-  hereLabel.textContent = t(document.body.classList.contains('kiosk') ? 'youAreHere' : 'qIsHere');
   showFound();
   $('aboutBody').innerHTML = aboutHtml(state.lang, { ...facts(), to: new Date(graph.to).toLocaleDateString(state.lang === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) });
   renderPanel();
