@@ -8,24 +8,37 @@ const TOPIC_COLORS = ['--topic-tech', '--topic-life', '--topic-health', '--topic
 const NO_TOPIC = css('--topic-none');
 const BG = new THREE.Color('#000000');
 const WHITE = new THREE.Color('#ffffff');
+const LINE = new THREE.Color(css('--q-purple-40')), LINE_ON = new THREE.Color(css('--q-purple-20'));   // a tint no topic uses
 const SEG = 14;                 // cylinder pieces per line, so lines can curve
 const IDLE_MS = (+new URLSearchParams(location.search).get('idle') || 90) * 1000;   // ?idle=30 sets the seconds until the exhibit resets itself
 const HOME = { net: { pos: [0, 45, 262], target: [0, -6, 0] }, city: { pos: [0, 100, 150], target: [0, 0, 8] } };
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let still = calm;   // no continuous motion: set by the system preference or by the pause button
+const TOUCH = 24;   // px: half a fingertip, the least a sphere offers as a target
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+function fail(key) {   // say what went wrong, in both languages, instead of leaving a black page
+  document.querySelector('h1').textContent = STRINGS.de.title;
+  $('fallback').innerHTML = `${STRINGS.de[key]}<br>${STRINGS.en[key]}`; $('fallback').hidden = false;
+  document.body.classList.add('failed');
+  throw new Error(key);
+}
 let renderer;
 try { renderer = new THREE.WebGLRenderer({ canvas: $('scene'), antialias: true }); }
-catch { $('fallback').textContent = STRINGS.de.noWebgl; $('fallback').hidden = false; throw new Error('WebGL unavailable'); }
+catch { fail('noWebgl'); }
 
-const [graph, wien] = await Promise.all(['data/graph.json', 'data/wien.json'].map(u => fetch(u).then(r => r.json())));
+const lightColour = c => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b > 0.5;   // White and Lime spheres need black lettering
+let graph, wien;
+try { [graph, wien] = await Promise.all(['data/graph.json', 'data/wien.json'].map(u => fetch(u).then(r => r.ok ? r.json() : Promise.reject(new Error(u))))); }
+catch { fail('noData'); }
 const nodes = graph.nodes, edges = graph.edges;
 nodes.forEach((n, i) => {
   n.i = i;
   const top = n.dom.indexOf(Math.max(...n.dom));
   n.color = n.dom[top] ? TOPIC_COLORS[top] : NO_TOPIC;
   n.links = [];
+  n.light = lightColour(new THREE.Color(n.color));
 });
 edges.forEach(e => { nodes[e.a].links.push({ other: e.b, n: e.n }); nodes[e.b].links.push({ other: e.a, n: e.n }); });
 nodes.forEach(n => n.links.sort((x, y) => y.n - x.n));
@@ -46,7 +59,7 @@ lamp.position.set(-0.5, 0.8, 1);
 camera.add(lamp);   // light travels with the viewer, so no sphere is ever in the dark
 
 const controls = new OrbitControls(camera, renderer.domElement);
-Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, enablePan: false, minDistance: 35, maxDistance: 380, autoRotate: !calm, autoRotateSpeed: 0.5 });
+Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, enablePan: false, minDistance: 14, maxDistance: 380, autoRotate: !calm, autoRotateSpeed: 0.5 });
 
 const ball = new THREE.SphereGeometry(1, 40, 28);
 const cur = nodes.map(n => new THREE.Vector3(...n.net));
@@ -57,6 +70,9 @@ const meshes = nodes.map(n => {
   scene.add(m);
   return m;
 });
+/* A thin light rim, so that dark spheres (Berry on black: 2.1 to 1) still have a visible edge. */
+const rimMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.BackSide, transparent: true, opacity: 0.55, depthWrite: false });
+const rims = nodes.map(() => { const r = new THREE.Mesh(ball, rimMaterial); scene.add(r); return r; });
 
 /* One width scale for lines and rings, so a ring can be compared with the lines next to it. */
 const maxJoint = Math.max(...edges.map(e => e.n));
@@ -98,8 +114,8 @@ const flecks = [];
 edges.forEach((e, k) => { const count = 1 + Math.round(3 * strength(e)); for (let j = 0; j < count; j++) flecks.push({ edge: k, u0: (j + (k * 0.37) % 1) / count, dir: (j + k) % 2 ? 1 : -1 }); });
 arcs.forEach((a, k) => flecks.push({ arc: k, u0: seeded(k + 3) }));
 const fleckCloud = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(flecks.length * 3), 3)),
-  new THREE.PointsMaterial({ map: glow, color: css('--q-lime'), size: 2.6, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
-fleckCloud.frustumCulled = false; fleckCloud.renderOrder = 3; fleckCloud.visible = !calm;
+  new THREE.PointsMaterial({ map: glow, size: 2.6, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+fleckCloud.frustumCulled = false; fleckCloud.renderOrder = 3; fleckCloud.visible = !still;
 scene.add(fleckCloud);
 const curve = edges.map(() => new THREE.Vector3());   // bezier control point of every line, kept for the flecks
 
@@ -160,11 +176,12 @@ const bezier = (a, ctrl, b, u, out) => out.copy(a).multiplyScalar((1 - u) * (1 -
 
 function placeNodes(time) {
   const t = state.mix, at = stalks.geometry.attributes.position;
-  const sway = calm ? 0 : 1.6 * (1 - t);   // the network breathes; above the map the addresses hold still
+  const sway = still ? 0 : 1.6 * (1 - t);   // the network breathes; above the map the addresses hold still
   nodes.forEach((n, i) => {
     const p = cur[i].set(...n.net).lerp(tmpA.set(...n.city), t), r = radiusNow(n);
     if (sway) { p.x += sway * Math.sin(time * 0.0006 + i * 1.7); p.y += sway * Math.sin(time * 0.0005 + i * 2.3); p.z += sway * Math.sin(time * 0.0007 + i * 0.9); }
     meshes[i].position.copy(p); meshes[i].scale.setScalar(r);
+    rims[i].position.copy(p); rims[i].scale.setScalar(r + 0.28);
     outward[i].copy(p).normalize().lerp(UP, t).normalize();
     at.setXYZ(2 * i, n.ground[0], 0, n.ground[1]);
     at.setXYZ(2 * i + 1, p.x, p.y, p.z);
@@ -246,10 +263,11 @@ function paint() {
     m.transparent = !lit; m.opacity = lit ? 1 : 0.16; m.depthWrite = lit; m.needsUpdate = true;
     meshes[i].renderOrder = lit ? 0 : 1;
     m.emissiveIntensity = em && em.nodes.has(i) ? 0.6 : 0.35;
+    rims[i].visible = lit;
   });
   edges.forEach((e, k) => {
-    // lines are white; on black, darker reads as fainter: one-off partnerships recede, close ones shine
-    tmpColor.copy(WHITE).multiplyScalar(em ? 1 : 0.13 + 0.87 * strength(e));
+    // on black, darker reads as fainter: one-off partnerships recede, close ones shine
+    if (em) tmpColor.copy(LINE_ON); else tmpColor.copy(LINE).multiplyScalar(0.16 + 0.84 * strength(e));
     for (let s = 0; s < SEG; s++) edgeMesh.setColorAt(k * SEG + s, tmpColor);
   });
   edgeMesh.instanceColor.needsUpdate = true;
@@ -258,6 +276,8 @@ function paint() {
 
 const focusNode = i => ({ nodes: new Set([i]), near: new Set(nodes[i].links.map(l => l.other)), edge: e => e.a === i || e.b === i });
 const focusPair = (a, b) => ({ nodes: new Set([a, b]), near: new Set(), edge: e => (e.a === a && e.b === b) || (e.a === b && e.b === a) });
+
+let placed = false;   // false forces one redraw of positions while motion is paused
 
 // ── camera moves ───────────────────────────────────────────────────────────────────────────
 let flight = null, mixing = null;
@@ -335,7 +355,7 @@ function project() {
 
 function drawLabels() {
   const em = state.emph, placed = [];
-  const wanted = i => i === state.hovered || (em ? em.nodes.has(i) || em.near.has(i) : i < 14);
+  const wanted = i => i === state.hovered || !em || em.nodes.has(i) || em.near.has(i);   // in the overview every place may show its name, biggest first, as many as fit
   const order = nodes.map((_, i) => i).filter(i => screen[i].visible && wanted(i))
     .sort((a, b) => rank(a) - rank(b));
   function rank(i) { return (i === state.hovered || (em && em.nodes.has(i)) ? -1000 : 0) + i; }
@@ -346,11 +366,12 @@ function drawLabels() {
     const strong = em ? em.nodes.has(i) : false, scale = strong ? 1.2 : 1;
     const inside = s.r * 2 > l.w * scale + 10;   // a sphere wide enough carries its own name
     const box = { x: s.x - l.w * scale / 2, y: inside ? s.y - l.h * scale / 2 : s.y + s.r + 4, w: l.w * scale, h: l.h * scale };
-    if (box.x + box.w < 0 || box.x > W || box.y < 0 || box.y > H) continue;
+    if (box.x < 4 || box.x + box.w > W - 4 || box.y < 0 || box.y + box.h > H) continue;   // never show half a name
     if (placed.some(p => box.x < p.x + p.w + 6 && p.x < box.x + box.w + 6 && box.y < p.y + p.h && p.y < box.y + box.h)) continue;
     placed.push(box); shown.add(i);
     l.el.style.transform = `translate(${Math.round(box.x)}px,${Math.round(box.y)}px)`;
     l.el.classList.toggle('strong', strong);
+    l.el.classList.toggle('dark', inside && nodes[i].light);
   }
   labels.forEach((l, i) => l.el.classList.toggle('on', shown.has(i)));
   const districtsOn = state.mix > 0.6;
@@ -363,29 +384,53 @@ function drawLabels() {
 }
 
 // ── pointer ────────────────────────────────────────────────────────────────────────────────
-function pick(x, y) {   // nearest sphere under the finger, with a generous minimum target
-  let best = null;
+function pick(x, y) {
+  let hit = null, near = null, nearD = Infinity;
   screen.forEach((s, i) => {
-    if (!s.visible || Math.hypot(s.x - x, s.y - y) > Math.max(s.r, 24)) return;
-    if (best === null || s.depth < screen[best].depth) best = i;
+    if (!s.visible) return;
+    const d = Math.hypot(s.x - x, s.y - y);
+    if (d <= s.r && (hit === null || s.depth < screen[hit].depth)) hit = i;   // truly under the finger: the front one wins
+    if (d <= TOUCH && d < nearD) { near = i; nearD = d; }                     // else the closest centre within a fingertip
   });
-  return best;
+  if (hit !== null && near !== null && screen[near].depth < screen[hit].depth) return near;   // a small sphere in front of a big one
+  return hit ?? near;
 }
+
+/* Where several small spheres share one fingertip, a tap cannot mean one of them.
+   Returns those spheres, so the camera can move closer instead of guessing. */
+function crowdAt(x, y) {
+  const close = [];
+  screen.forEach((s, i) => { if (s.visible && s.r < TOUCH && Math.hypot(s.x - x, s.y - y) <= TOUCH) close.push(i); });
+  return close.length > 1 && camera.position.distanceTo(controls.target) > 40 ? close : null;
+}
+function zoomInto(group) {
+  const centre = new THREE.Vector3(); group.forEach(i => centre.add(cur[i])); centre.divideScalar(group.length);
+  const dir = camera.position.clone().sub(controls.target), dist = Math.max(26, dir.length() * 0.45);
+  controls.autoRotate = false;
+  flyTo(centre.clone().addScaledVector(dir.normalize(), dist), centre, 900);
+  toast(t('crowd'), 2600);
+}
+function tap(x, y) {
+  const group = state.emph ? null : crowdAt(x, y), i = pick(x, y);
+  if (group && !(i !== null && Math.hypot(screen[i].x - x, screen[i].y - y) <= screen[i].r)) { zoomInto(group); return; }
+  if (state.tour !== null) { if (i === null) return; showTour(null); }   // a tap on a sphere during the tour leaves the tour for that place
+  select(i);
+}
+
 let down = null, lastInput = performance.now();
 const canvas = renderer.domElement;
-canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; flight = null; });
+canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; flight = null; document.body.classList.add('used'); });
 canvas.addEventListener('pointerup', e => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 8 || performance.now() - down.t > 600) return;
-  if (state.tour !== null) return;
-  select(pick(e.clientX, e.clientY));
+  tap(e.clientX, e.clientY);
 });
 canvas.addEventListener('pointermove', e => {
   if (e.pointerType !== 'mouse') return;
   state.hovered = pick(e.clientX, e.clientY);
-  canvas.classList.toggle('pick', state.hovered !== null && state.tour === null);
+  canvas.classList.toggle('pick', state.hovered !== null);
 });
 canvas.addEventListener('pointerleave', () => { state.hovered = null; });
-for (const type of ['pointerdown', 'keydown', 'wheel']) addEventListener(type, () => { lastInput = performance.now(); }, { passive: true, capture: true });
+for (const type of ['pointerdown', 'pointermove', 'touchmove', 'scroll', 'keydown', 'wheel']) addEventListener(type, () => { lastInput = performance.now(); }, { passive: true, capture: true });
 
 // ── panel, tour, texts ─────────────────────────────────────────────────────────────────────
 const t = key => STRINGS[state.lang][key];
@@ -400,24 +445,38 @@ const facts = () => {
     total: num(graph.total), joint: num(graph.joint), share: Math.round(100 * graph.joint / graph.total) };
 };
 
+let toastTimer = null;
+function toast(text, ms) {
+  const el = $('toast');
+  clearTimeout(toastTimer);
+  if (!text) { if (el.matches(':popover-open')) el.hidePopover(); return; }
+  el.textContent = text;
+  if (!el.matches(':popover-open')) el.showPopover();
+  if (ms) toastTimer = setTimeout(() => toast(null), ms);
+}
+
+let opener = null;   // what had focus before a card opened, to hand it back on closing
 function select(i) {
   if (i === null && state.selected === null && !state.list) return;
   state.selected = i; state.list = false;
   state.emph = i === null ? null : focusNode(i);
-  controls.autoRotate = !calm && i === null;
-  paint(); renderPanel();
+  controls.autoRotate = !still && i === null;
+  paint(); renderPanel(true);
   if (i === null) flyHome(); else flyToNode(i);
 }
 
-function renderPanel() {
-  const panel = $('panel'), i = state.selected;
+function renderPanel(takeFocus = false) {
+  const panel = $('panel'), i = state.selected, wasOpen = !panel.hidden;
   panel.hidden = i === null && !state.list;
+  if (!wasOpen && !panel.hidden) opener = document.activeElement;
+  if (wasOpen && panel.hidden && opener?.isConnected && panel.contains(document.activeElement)) opener.focus();
   document.body.classList.toggle('busy', !panel.hidden || state.tour !== null);
   if (panel.hidden) return;
   const close = `<button type="button" class="btn close" id="panelClose" aria-label="${t('close')}">×</button>`;
   if (i === null) {
-    panel.innerHTML = `<div class="head on-light">${close}<h2>${fill(t('listTitle'), facts())}</h2><p class="also">${fill(t('listNote'), facts())}</p></div>
-      <div class="body"><div class="rows">${nodes.map(n => `<button type="button" class="row" data-node="${n.i}">${dot(n.color)}<span>${esc(n.id)}</span><span class="n">${num(n.count)}</span></button>`).join('')}</div></div>`;
+    panel.innerHTML = `<div class="head on-light">${close}<h2>${fill(t('listTitle'), facts())}</h2><p class="also">${fill(t('listNote'), facts())}</p>
+      <input type="search" id="listFilter" class="filter" placeholder="${t('search')}" aria-label="${t('search')}" autocomplete="off"></div>
+      <div class="body"><p class="note" id="noMatch" hidden>${t('noMatch')}</p><div class="rows">${nodes.map(n => `<button type="button" class="row" data-node="${n.i}">${dot(n.color)}<span>${esc(n.id)}</span><span class="n">${num(n.count)}</span></button>`).join('')}</div></div>`;
   } else {
     const n = nodes[i], name = state.lang === 'de' ? n.name : n.en, sum = n.dom.reduce((a, b) => a + b, 0);
     const pct = Math.round(100 * n.joint / n.count);
@@ -437,6 +496,13 @@ function renderPanel() {
       <p class="note">${fill(t('partnersNote'), { n: n.links.length })}</p></div>`;
   }
   panel.scrollTop = 0;
+  if (takeFocus) panel.focus({ preventScroll: true });
+  const filter = $('listFilter');
+  if (filter) filter.oninput = () => {
+    const q = filter.value.trim().toLowerCase(); let any = false;
+    panel.querySelectorAll('.row').forEach(row => { const n = nodes[+row.dataset.node], show = !q || [n.id, n.name, n.en].some(x => x.toLowerCase().includes(q)); row.hidden = !show; any ||= show; });
+    $('noMatch').hidden = any;
+  };
   $('panelClose').onclick = () => select(null);
   panel.querySelectorAll('[data-node]').forEach(b => { b.onclick = () => select(+b.dataset.node); });
 }
@@ -445,7 +511,7 @@ function showTour(step) {
   state.tour = step;
   const open = step !== null;
   $('tour').hidden = !open; $('dock').hidden = open;
-  if (!open) { state.emph = null; controls.autoRotate = !calm; paint(); setView('net'); flyHome(); renderPanel(); return; }
+  if (!open) { state.emph = null; controls.autoRotate = !still; paint(); setView('net'); flyHome(); renderPanel(); return; }
   state.selected = null; state.list = false; renderPanel();
   const s = TOUR[step], f = facts();
   $('tourCount').textContent = fill(t('step'), { i: step + 1, n: TOUR.length });
@@ -454,7 +520,7 @@ function showTour(step) {
     + (s.show === 'topics' ? `<ul>${TOPIC_COLORS.map((c, d) => `<li>${dot(c)}${t('topics')[d]}</li>`).join('')}</ul>` : '');
   $('tourBack').hidden = step === 0;
   $('tourNext').textContent = step === TOUR.length - 1 ? t('tourDone') : t('next');
-  controls.autoRotate = !calm;
+  controls.autoRotate = !still;
   setView(s.show === 'city' ? 'city' : 'net');
   state.emph = s.show === 'pair' ? focusPair(edges[0].a, edges[0].b) : null;
   paint();
@@ -472,7 +538,8 @@ function applyTexts() {
   document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
   document.querySelectorAll('[data-t-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.tLabel)); });
   document.title = t('docTitle');
-  $('lang').textContent = state.lang === 'de' ? 'English' : 'Deutsch';
+  $('lang').textContent = state.lang === 'de' ? 'English' : 'Deutsch'; $('lang').lang = state.lang === 'de' ? 'en' : 'de';
+  $('pause').setAttribute('aria-label', t(still ? 'play' : 'pause')); $('pause').textContent = still ? '▶' : '❙❙'; $('pause').setAttribute('aria-pressed', still);
   $('subtitle').textContent = fill(t('subtitle'), facts());
   $('bandTrack').innerHTML = [0, 1].map(() => t('band').map(item => `<span>${fill(item, facts())}</span>`).join('')).join('');   // twice, for a seamless loop
   $('legendTopics').innerHTML = TOPIC_COLORS.map((c, d) => `<li>${dot(c)}${t('topics')[d]}</li>`).join('');
@@ -488,20 +555,39 @@ $('tourStart').onclick = () => showTour(0);
 $('tourBack').onclick = () => showTour(state.tour - 1);
 $('tourNext').onclick = () => showTour(state.tour === TOUR.length - 1 ? null : state.tour + 1);
 $('tourClose').onclick = () => showTour(null);
-$('listOpen').onclick = () => { state.list = !state.list; renderPanel(); };
+$('listOpen').onclick = () => { if (state.selected !== null) select(null); state.list = !state.list; renderPanel(true); };
+$('homeBtn').onclick = () => {   // back to the overview of the current view, whatever the visitor did to the camera
+  if (state.tour !== null) { showTour(null); return; }
+  if (state.selected !== null || state.list) select(null); else { controls.autoRotate = !still; flyHome(); }
+};
+function setStill(on) {
+  still = on;
+  document.body.classList.toggle('still', on);
+  controls.autoRotate = !on && state.selected === null;
+  if (on) { controls.enableDamping = false; controls.update(); controls.enableDamping = true; }   // drop the rotation still in the damping
+  fleckCloud.visible = !on; placed = false;
+  $('pause').setAttribute('aria-pressed', on); $('pause').setAttribute('aria-label', t(on ? 'play' : 'pause')); $('pause').textContent = on ? '▶' : '❙❙';
+}
+$('pause').onclick = () => setStill(!still);
 $('aboutOpen').onclick = () => $('about').showModal();
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('about').open) { if (state.tour !== null) showTour(null); else if (state.selected !== null || state.list) select(null); } });
 
-/* An exhibit must find its way back to the start when a visitor walks off. */
+/* An exhibit must find its way back to the start when a visitor walks off: first a warning
+   with a countdown, then everything returns to the opening state, the language included. */
+const WARN_MS = Math.min(15_000, IDLE_MS / 2);
 function resetIfIdle(now) {
-  if (now - lastInput < IDLE_MS) return;
-  lastInput = now;
-  const touched = state.tour !== null || state.selected !== null || state.list || state.view !== 'net' || $('about').open
+  const idle = now - lastInput;
+  const touched = state.tour !== null || state.selected !== null || state.list || state.view !== 'net' || state.lang !== 'de' || $('about').open
     || camera.position.distanceTo(tmpA.set(...HOME.net.pos)) > 150;
-  if (!touched) return;
+  if (!touched || idle < IDLE_MS - WARN_MS) { if (warned) { warned = false; toast(null); } return; }
+  if (idle < IDLE_MS) { warned = true; toast(fill(t('idleNote'), { s: Math.ceil((IDLE_MS - idle) / 1000) })); return; }
+  lastInput = now; warned = false; toast(null);
   $('about').close();
-  if (state.tour !== null) showTour(null); else { setView('net'); select(null); }
+  document.body.classList.remove('used');
+  if (state.lang !== 'de') { state.lang = 'de'; applyTexts(); }
+  if (state.tour !== null) showTour(null); else { setView('net'); if (state.selected !== null || state.list) select(null); else flyHome(); }
 }
+let warned = false;
 
 // ── loop ───────────────────────────────────────────────────────────────────────────────────
 function resize() {
@@ -513,7 +599,6 @@ function resize() {
 }
 addEventListener('resize', resize);
 
-let placed = false;
 function frame(now) {
   requestAnimationFrame(frame);
   if (mixing) {
@@ -521,7 +606,7 @@ function frame(now) {
     state.mix = mixing.from + (mixing.to - mixing.from) * ease(u);
     if (u === 1) mixing = null;
   }
-  if (mixing || !calm || !placed) { placeNodes(now); moveFlecks(now); placed = true; }
+  if (mixing || !still || !placed) { placeNodes(now); moveFlecks(now); placed = true; }
   if (flight) {
     const u = Math.min(1, (now - flight.start) / flight.ms), k = ease(u);
     camera.position.lerpVectors(flight.p0, flight.p1, k);
@@ -537,6 +622,7 @@ function frame(now) {
   resetIfIdle(now);
 }
 
+if (new URLSearchParams(location.search).has('kiosk')) document.body.classList.add('kiosk');   // wall screen: every control within a child's reach
 document.fonts.ready.then(() => labels.forEach(l => { l.w = 0; }));   // label widths were measured in the fallback font
 resize();
 { const [pos, target] = home(); camera.position.copy(pos); controls.target.copy(target); }

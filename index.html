@@ -32,11 +32,13 @@
         <button type="button" id="viewNet" data-t="viewNet" aria-pressed="true"></button>
         <button type="button" id="viewCity" data-t="viewCity" aria-pressed="false"></button>
       </div>
-      <button type="button" class="btn" id="lang" data-t-label="langLabel"></button>
+      <button type="button" class="btn" id="lang"></button>
+      <button type="button" class="btn icon" id="pause" aria-pressed="false"></button>
     </div>
   </header>
 
-  <aside class="panel" id="panel" hidden aria-live="polite"></aside>
+  <main>
+  <aside class="panel" id="panel" hidden aria-live="polite" tabindex="-1"></aside>
 
   <section class="legend" id="legend" data-t-label="legendLabel">
     <ul id="legendTopics"></ul>
@@ -48,10 +50,12 @@
   <div class="band" aria-hidden="true"><div class="band-track" id="bandTrack"></div></div>
 
   <div class="dock" id="dock">
-    <button type="button" class="btn primary" id="tourStart" data-t="tourStart"></button>
+    <button type="button" class="btn primary" id="tourStart" data-t-label="tourStart"><span class="long" data-t="tourStart"></span><span class="short" data-t="tourShort"></span></button>
     <button type="button" class="btn" id="listOpen" data-t-label="listOpen"><span class="long" data-t="listOpen"></span><span class="short" data-t="listShort"></span></button>
     <button type="button" class="btn" id="aboutOpen" data-t-label="aboutOpen"><span class="long" data-t="aboutOpen"></span><span class="short" data-t="aboutShort"></span></button>
+    <button type="button" class="btn" id="homeBtn" data-t-label="home"><span aria-hidden="true">⌂</span><span class="long" data-t="home"></span></button>
   </div>
+  <p class="hint" id="hint" data-t="hint"></p>
 
   <section class="tour on-light" id="tour" hidden aria-live="polite">
     <p><span class="tag" id="tourCount"></span></p>
@@ -64,12 +68,16 @@
     </div>
   </section>
 
+  </main>
+
+  <div class="toast" id="toast" popover="manual" role="status"></div>
+
   <dialog id="about" class="on-light">
     <div id="aboutBody"></div>
     <form method="dialog"><button class="btn primary" data-t="close"></button></form>
   </dialog>
 
-  <p class="fallback" id="fallback" hidden data-t="noWebgl"></p>
+  <p class="fallback" id="fallback" hidden></p>
   <script type="module" src="app.js"></script>
 </body>
 </html>

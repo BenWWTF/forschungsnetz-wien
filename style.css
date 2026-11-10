@@ -29,7 +29,8 @@ button { font: inherit; color: inherit; }
 .lbl { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 15px; font-weight: 500; text-shadow: 0 0 4px #000, 0 0 8px #000, 0 1px 2px #000; opacity: 0; transition: opacity .25s; will-change: transform; }
 .lbl.on { opacity: 1; }
 .lbl.strong { font-size: 18px; font-weight: 600; }
-.lbl.district { font-size: 13px; font-weight: 400; opacity: 0; }
+.lbl.dark { color: #000; text-shadow: 0 0 3px #fff, 0 0 6px #fff; }   /* a name carried by a White or Lime sphere */
+.lbl.district { font-size: 14px; font-weight: 400; opacity: 0; }
 .lbl.district.on { opacity: .75; }
 
 /* header: the Q. alone, top left, with at least its own height as clear space */
@@ -46,6 +47,7 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.02; }
 .btn:hover { background: var(--q-white); color: var(--q-black); }
 .btn.primary, .btn.primary:hover { background: var(--q-lime); border-color: var(--q-lime); color: var(--q-black); }
 .btn.primary:hover { background: var(--q-lime-80); border-color: var(--q-lime-80); }
+.btn.icon { width: 48px; padding: 0; font-size: 17px; }
 .btn.quiet, .btn.quiet:hover { background: none; border-color: transparent; color: inherit; text-decoration: underline; text-underline-offset: 4px; }
 .btn:focus-visible, .seg button:focus-visible, .row:focus-visible { outline: 3px solid var(--q-white); outline-offset: 2px; }
 .on-light .btn { background: none; border-color: var(--q-black); color: var(--q-black); }
@@ -54,7 +56,7 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.02; }
 .on-light .btn.quiet, .on-light .btn.quiet:hover { background: none; border-color: transparent; color: var(--q-black); }
 .on-light .btn:focus-visible { outline-color: var(--q-black); }
 .seg { display: flex; border: 2px solid var(--q-white); border-radius: var(--q-radius-pill); background: var(--q-black); padding: 3px; }
-.seg button { min-height: 38px; padding: 0 16px; border: 0; border-radius: var(--q-radius-pill); background: none; font-weight: 600; cursor: pointer; color: var(--q-white); }
+.seg button { min-height: 44px; padding: 0 16px; border: 0; border-radius: var(--q-radius-pill); background: none; font-weight: 600; cursor: pointer; color: var(--q-white); }
 .seg button[aria-pressed="true"] { background: var(--q-lime); color: var(--q-black); }
 
 /* tag: one soft corner, taken from the tail of the Q. */
@@ -65,7 +67,7 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.02; }
 .legend li, .legend p { display: flex; align-items: center; gap: 9px; }
 .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; display: inline-block; border: 1.5px solid currentColor; }   /* the ring keeps White and Lime visible on any surface */
 .key-ball { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; flex-shrink: 0; }
-.key-line { width: 14px; height: 3px; border-radius: 2px; background: currentColor; flex-shrink: 0; }
+.key-line { width: 14px; height: 3px; border-radius: 2px; background: var(--q-purple-40); flex-shrink: 0; }
 .key-ring { width: 14px; height: 9px; border-radius: 9px 9px 0 0; border: 2px solid currentColor; border-bottom: 0; flex-shrink: 0; }
 .legend p:first-of-type { margin-top: 6px; }
 .legend p { margin-top: -1px; }
@@ -76,23 +78,38 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.02; }
 .band-track span { padding: 0 44px; }
 @keyframes band { to { transform: translateX(-50%); } }
 .short { display: none; }
+body.still .band-track { animation-play-state: paused; }
+#homeBtn { display: inline-flex; align-items: center; gap: 8px; }
+.hint { display: none; }
+/* messages that must be seen wherever the visitor is, also above the open dialog */
+.toast { position: fixed; inset: auto auto calc(var(--foot) + 66px) 50%; transform: translateX(-50%); margin: 0; max-width: min(520px, calc(100vw - 32px)); border: 0; border-radius: var(--q-radius-card); padding: 12px 20px; background: var(--q-white); color: var(--q-black); font: 600 17px/1.3 var(--q-font-intro); text-align: center; box-shadow: 0 4px 24px rgba(0, 0, 0, .6); }
+.filter { display: block; width: 100%; min-height: 48px; margin-top: 12px; padding: 0 18px; border: 2px solid var(--q-black); border-radius: var(--q-radius-pill); background: var(--q-white); color: var(--q-black); font: 500 17px var(--q-font-intro); }
+.filter:focus-visible { outline: 3px solid var(--q-black); outline-offset: 2px; }
+.row[hidden] { display: none; }
+/* wall screen (?kiosk): the view and language switches move down into a child's reach */
+.kiosk .controls { position: fixed; right: var(--edge); bottom: var(--foot); }
+.kiosk .panel { bottom: calc(var(--foot) + 66px); }
 .dock { position: fixed; left: 50%; transform: translateX(-50%); bottom: var(--foot); display: flex; gap: 10px; }
 
 /* place card: Lime head with black type, dark body for the data colours */
 .panel { position: fixed; top: 104px; right: var(--edge); bottom: var(--foot); width: min(380px, calc(100vw - 32px)); background: var(--card); border: 2px solid var(--q-lime); border-radius: var(--q-radius-card); overflow-y: auto; user-select: text; -webkit-user-select: text; }
 .panel[hidden], .tour[hidden], .dock[hidden], .legend[hidden] { display: none; }
+.panel:focus { outline: none; }
+body.busy .dock { display: none; }   /* a card is open: its own buttons lead on */
+/* a fade at the lower edge says: there is more below */
+.panel::after { content: ""; position: sticky; bottom: 0; display: block; height: 44px; margin-top: -44px; background: linear-gradient(transparent, var(--card)); pointer-events: none; }
 .head { position: relative; background: var(--q-lime); color: var(--q-black); padding: 18px 20px 22px; border-radius: 0 0 56px 0; }
-.head.has-badge { padding-bottom: 64px; }
+.head.has-badge { padding-bottom: 72px; }
 .head .close { float: right; margin: -4px -6px 6px 10px; width: 48px; height: 48px; padding: 0; font-size: 26px; line-height: 1; }
 .head h2 { font-size: 27px; line-height: 1.08; margin-top: 10px; }
 .head .also { font-size: 15px; font-weight: 500; margin-top: 6px; }
 /* Störer: the round Berry badge of the styleguide, carrying the key figure */
-.badge { position: absolute; right: 18px; bottom: -46px; width: 128px; height: 128px; border-radius: 50%; background: var(--q-berry); color: var(--q-white); display: grid; align-content: center; justify-items: center; text-align: center; padding: 10px; }
+.badge { position: absolute; right: 18px; bottom: -52px; width: 144px; height: 144px; border-radius: 50%; background: var(--q-berry); color: var(--q-white); display: grid; align-content: center; justify-items: center; text-align: center; padding: 10px; }
 .badge b { font: 600 34px/1 var(--q-font-headline); font-variant-numeric: tabular-nums; }
-.badge span { font-size: 11.5px; line-height: 1.15; font-weight: 500; margin-top: 4px; }
-.body { padding: 18px 20px 24px; }
-.head.has-badge + .body { padding-top: 30px; }
-.head.has-badge + .body h3:first-child { max-width: calc(100% - 140px); margin-top: 0; }
+.badge span { font-size: 13px; line-height: 1.15; font-weight: 500; margin-top: 4px; }
+.body { padding: 18px 20px 48px; }
+.head.has-badge + .body { padding-top: 34px; }
+.head.has-badge + .body h3:first-child { max-width: calc(100% - 156px); margin-top: 0; }
 .panel h3 { font-size: 18px; font-weight: 600; margin: 24px 0 10px; }
 .together { height: 14px; border-radius: 7px; background: rgba(255, 255, 255, .2); overflow: hidden; }
 .together i { display: block; height: 100%; background: var(--q-lime); border-radius: 7px 0 0 7px; min-width: 4px; }
@@ -128,6 +145,7 @@ dialog a { color: inherit; text-decoration: underline; text-underline-offset: 3p
 dialog form { position: sticky; bottom: 0; margin-top: 12px; padding: 12px 0 18px; text-align: right; background: linear-gradient(transparent, var(--q-white) 30%); }
 .fallback { position: fixed; inset: 0; display: grid; place-items: center; padding: 32px; text-align: center; }
 .fallback[hidden] { display: none; }
+.failed main, .failed .controls, .failed .band { display: none; }
 
 /* Phone held upright: cards rise from the bottom edge, the bottom row shrinks to one line. */
 @media (max-width: 900px) and (orientation: portrait) {
@@ -145,13 +163,20 @@ dialog form { position: sticky; bottom: 0; margin-top: 12px; padding: 12px 0 18p
   .legend p { display: none; }
   .dock { left: var(--edge); right: var(--edge); bottom: max(14px, env(safe-area-inset-bottom)); transform: none; justify-content: center; gap: 8px; }
   .dock .btn { padding: 0 16px; }
+  .controls { flex-wrap: wrap; gap: 8px; }
+  .controls .seg button { padding: 0 13px; }
+  .controls .btn { padding: 0 15px; }
   .panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 50vh; max-height: 50dvh; border-radius: 20px 20px 0 0; border-width: 2px 0 0; }
   .head { padding: 14px 18px 18px; }
   .head h2 { font-size: 23px; }
-  .badge { width: 112px; height: 112px; bottom: -40px; }
-  .badge b { font-size: 29px; }
-  .badge span { font-size: 10.5px; }
-  .body { padding: 16px 18px max(22px, env(safe-area-inset-bottom)); }
+  .badge { width: 132px; height: 132px; bottom: -48px; }
+  .badge b { font-size: 30px; }
+  .badge span { font-size: 12.5px; }
+  .body { padding: 16px 18px max(48px, env(safe-area-inset-bottom)); }
+  #homeBtn { width: 48px; padding: 0; justify-content: center; }
+  .hint { display: block; position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(max(14px, env(safe-area-inset-bottom)) + 124px); width: max-content; max-width: calc(100vw - 32px); padding: 8px 16px; border-radius: var(--q-radius-pill); background: var(--q-white); color: var(--q-black); font-size: 15px; font-weight: 600; pointer-events: none; }
+  body.used .hint, body.busy .hint { display: none; }
+  .toast { bottom: calc(max(14px, env(safe-area-inset-bottom)) + 70px); }
   .tour { width: auto; left: 0; right: 0; bottom: 0; transform: none; max-height: 62vh; max-height: 62dvh; border-radius: 20px 20px 0 0; padding: 16px 18px max(14px, env(safe-area-inset-bottom)); }
   .tour h2 { font-size: 23px; }
   .tour #tourBody { font-size: 17px; }
@@ -167,8 +192,9 @@ dialog form { position: sticky; bottom: 0; margin-top: 12px; padding: 12px 0 18p
   .title { --mark: 30px; }
   h1 { font-size: 22px; }
   #subtitle { display: none; }
-  .seg button { min-height: 34px; }
-  .btn { min-height: 42px; }
+  .seg button { min-height: 44px; padding: 0 12px; }
+  .btn { min-height: 44px; padding: 0 14px; }
+  .btn.icon { width: 44px; }
   .legend { font-size: 13px; bottom: max(10px, env(safe-area-inset-bottom)); }
   .legend p { display: none; }
   .dock { bottom: max(10px, env(safe-area-inset-bottom)); }
@@ -176,9 +202,10 @@ dialog form { position: sticky; bottom: 0; margin-top: 12px; padding: 12px 0 18p
   .tour { padding: 14px 16px 16px; }
   .head { padding: 12px 16px 16px; }
   .head h2, .tour h2 { font-size: 21px; }
-  .badge { width: 104px; height: 104px; bottom: -38px; }
-  .badge b { font-size: 27px; }
-  .badge span { font-size: 10px; }
+  .badge { width: 124px; height: 124px; bottom: -44px; }
+  .badge b { font-size: 28px; }
+  .badge span { font-size: 12px; }
+  .toast { bottom: 64px; }
   .body { padding: 14px 16px 16px; }
   .panel h3 { margin-top: 16px; }
   .tour #tourBody { font-size: 16px; }

@@ -5,7 +5,12 @@ export const STRINGS = {
     docTitle: 'Wer forscht mit wem in Wien? Ein Netz in 3D',
     title: 'Wer forscht mit wem in Wien?',
     subtitle: '{places} Forschungsorte, {pairs} Verbindungen. Dreh das Netz und tippe auf eine Kugel.',
-    viewLabel: 'Ansicht', viewNet: 'Netz', viewCity: 'Stadtplan', langLabel: 'Sprache wechseln', legendLabel: 'Legende',
+    viewLabel: 'Ansicht', viewNet: 'Netz', viewCity: 'Stadtplan', legendLabel: 'Legende',
+    pause: 'Bewegung anhalten', play: 'Bewegung fortsetzen', home: 'Überblick', tourShort: 'So geht’s',
+    hint: 'Dreh das Netz und tippe auf eine Kugel', crowd: 'Hier liegen mehrere Orte dicht beisammen. Näher ran!',
+    idleNote: 'Noch da? Tippe irgendwo, sonst beginnt alles in {s} Sekunden von vorn.',
+    search: 'Ort suchen', noMatch: 'Kein Ort mit diesem Namen.',
+    noData: 'Die Daten konnten nicht geladen werden. Bitte lade die Seite neu.',
     keyBall: 'Größe: Zahl der Veröffentlichungen', keyLine: 'Linie: gemeinsam veröffentlicht', keyRing: 'Kleine Bögen: ohne Wiener Partner veröffentlicht',
     tourStart: 'So liest du das Netz', listOpen: 'Alle Orte', listShort: 'Orte', aboutOpen: 'Über das Netz', aboutShort: 'Info',
     back: 'Zurück', next: 'Weiter', tourDone: 'Selbst erkunden', tourClose: 'Beenden', close: 'Schließen', step: 'Schritt {i} von {n}',
@@ -27,7 +32,12 @@ export const STRINGS = {
     docTitle: 'Who does research with whom in Vienna? A network in 3D',
     title: 'Who does research with whom in Vienna?',
     subtitle: '{places} research places, {pairs} connections. Spin the network and tap a sphere.',
-    viewLabel: 'View', viewNet: 'Network', viewCity: 'City map', langLabel: 'Switch language', legendLabel: 'Legend',
+    viewLabel: 'View', viewNet: 'Network', viewCity: 'City map', legendLabel: 'Legend',
+    pause: 'Pause motion', play: 'Resume motion', home: 'Overview', tourShort: 'How to',
+    hint: 'Spin the network and tap a sphere', crowd: 'Several places sit close together here. Moving in!',
+    idleNote: 'Still there? Tap anywhere, or everything starts over in {s} seconds.',
+    search: 'Find a place', noMatch: 'No place with this name.',
+    noData: 'The data could not be loaded. Please reload the page.',
     keyBall: 'Size: number of publications', keyLine: 'Line: published together', keyRing: 'Small arcs: published without a Vienna partner',
     tourStart: 'How to read the network', listOpen: 'All places', listShort: 'Places', aboutOpen: 'About', aboutShort: 'Info',
     back: 'Back', next: 'Next', tourDone: 'Explore yourself', tourClose: 'End', close: 'Close', step: 'Step {i} of {n}',
@@ -80,7 +90,7 @@ export function aboutHtml(lang, f) {
     <ul><li>Eine Linie zählt nur, wenn zwei verschiedene Menschen an den beiden Orten arbeiten. Eine Person mit zwei Arbeitgebern ist keine Zusammenarbeit.</li>
     <li>Das Volumen einer Kugel wächst mit der Zahl der Veröffentlichungen, die Dicke einer Linie mit der Zahl der gemeinsamen.</li>
     <li>Die kleinen Bögen an einer Kugel zeigen, wie viel ein Ort ohne anderen Wiener Forschungsort veröffentlicht hat: ein bis sieben Bögen, in logarithmischen Stufen. Partner außerhalb Wiens können trotzdem beteiligt sein.</li>
-    <li>Jede Linie verläuft von der Farbe des einen Orts zur Farbe des anderen. Die wandernden Lichtpunkte sind Schmuck und zeigen keine Daten.</li>
+    <li>Die wandernden Lichtpunkte auf den Linien sind Schmuck und zeigen keine Daten.</li>
     <li>Dachorganisationen sind zu einer Kugel zusammengefasst und stehen im Stadtplan an ihrem Hauptsitz.</li>
     <li>Im Netz sitzen alle Orte auf der Oberfläche einer Kugel, eng verbundene näher beisammen. Die Lage hat sonst keine Bedeutung.</li></ul>
     <h3>Quellen</h3>
@@ -93,7 +103,7 @@ export function aboutHtml(lang, f) {
     <ul><li>A line only counts when two different people work at the two places. One person with two employers is not a collaboration.</li>
     <li>The volume of a sphere grows with the number of publications, the thickness of a line with the number of joint ones.</li>
     <li>The small arcs on a sphere show how much a place has published without another research place in Vienna: one to seven arcs, in logarithmic steps. Partners outside Vienna may still be involved.</li>
-    <li>Each line runs from the colour of one place to the colour of the other. The travelling lights are decoration and carry no data.</li>
+    <li>The travelling lights on the lines are decoration and carry no data.</li>
     <li>Umbrella organisations are merged into one sphere and sit at their head office on the city map.</li>
     <li>In the network, all places sit on the surface of a sphere, closely linked ones nearer to each other. Position has no other meaning.</li></ul>
     <h3>Sources</h3>
