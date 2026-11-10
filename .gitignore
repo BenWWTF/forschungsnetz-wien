@@ -2,3 +2,8 @@ build/cache/
 build/*.geojson
 build/geocode.log
 .DS_Store
+
+# Q. design system sources: kept local until the Q. has published its new brand
+design/index.html
+design/tokens.json
+build/tokens.mjs

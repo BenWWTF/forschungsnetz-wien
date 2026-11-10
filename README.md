@@ -12,6 +12,11 @@ Live: https://benwwtf.github.io/forschungsnetz-wien/
 
 No build step for the site itself: plain HTML, CSS and ES modules, three.js vendored in `vendor/`.
 
+## Design
+
+The look follows the Q. brand. `design/tokens.css` holds the brand values as CSS variables; `style.css` assigns
+them to roles and `app.js` reads its colours from there.
+
 ## Updating the data
 
 ```sh

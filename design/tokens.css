@@ -1,0 +1,33 @@
+/* Brand values of the Q. as CSS variables. Generated; the sources are kept outside this repository. */
+:root {
+  --q-lime: #e6ff68;
+  --q-berry: #740b85;
+  --q-petrol: #126f8b;
+  --q-purple: #53269d;
+  --q-black: #000000;
+  --q-white: #ffffff;
+  --q-lime-80: #ebff86;
+  --q-lime-60: #f0ffa4;
+  --q-lime-40: #f5ffc3;
+  --q-lime-20: #faffe1;
+  --q-berry-80: #903c9d;
+  --q-berry-60: #ac6db6;
+  --q-berry-40: #c79dce;
+  --q-berry-20: #e3cee7;
+  --q-petrol-80: #418ca2;
+  --q-petrol-60: #71a9b9;
+  --q-petrol-40: #a0c5d1;
+  --q-petrol-20: #d0e2e8;
+  --q-purple-80: #7551b1;
+  --q-purple-60: #987dc4;
+  --q-purple-40: #baa8d8;
+  --q-purple-20: #ddd4eb;
+  --q-font-headline: "Clash Display", "Clash Grotesk", system-ui, sans-serif;
+  --q-font-intro: "Clash Grotesk", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --q-font-copy: "PP Radio Grotesk", "Clash Grotesk", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --q-radius-pill: 999px;
+  --q-radius-card: 20px;
+  --q-radius-tail: 6px 6px 16px 6px;
+  --q-logo-min: 25px;
+  --q-logo-min-claim: 50px;
+}

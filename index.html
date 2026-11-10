@@ -7,9 +7,11 @@
   <meta name="description" content="Prototyp für eine Ausstellung: Wiens Forschungsorte und ihre gemeinsamen Veröffentlichungen als 3D-Netz zum Drehen und Antippen.">
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#000000">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M9 22 22 10' stroke='%23b9a8f5' stroke-width='2'/%3E%3Ccircle cx='9' cy='22' r='5' fill='%232f6fd0'/%3E%3Ccircle cx='22' cy='10' r='4' fill='%23f2c94c'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M9 22 22 10' stroke='%23fff' stroke-width='2'/%3E%3Ccircle cx='9' cy='22' r='5' fill='%23e6ff68'/%3E%3Ccircle cx='22' cy='10' r='4' fill='%23740b85'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap">
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-grotesk@400,500,600&display=swap">
+  <link rel="stylesheet" href="design/tokens.css">
   <link rel="stylesheet" href="style.css">
   <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
 </head>
@@ -51,8 +53,8 @@
     <button type="button" class="btn" id="aboutOpen" data-t-label="aboutOpen"><span class="long" data-t="aboutOpen"></span><span class="short" data-t="aboutShort"></span></button>
   </div>
 
-  <section class="tour" id="tour" hidden aria-live="polite">
-    <p class="tour-step" id="tourCount"></p>
+  <section class="tour on-light" id="tour" hidden aria-live="polite">
+    <p><span class="tag" id="tourCount"></span></p>
     <h2 id="tourTitle"></h2>
     <div id="tourBody"></div>
     <div class="tour-nav">
@@ -62,7 +64,7 @@
     </div>
   </section>
 
-  <dialog id="about">
+  <dialog id="about" class="on-light">
     <div id="aboutBody"></div>
     <form method="dialog"><button class="btn primary" data-t="close"></button></form>
   </dialog>

@@ -2,8 +2,10 @@ import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { STRINGS, TOUR, aboutHtml } from './texts.js';
 
-const TOPIC_COLORS = ['#2f6fd0', '#35b58a', '#b8336a', '#f2c94c'];   // physical, life, health, social (validated for colour-vision deficiencies)
-const NO_TOPIC = '#7d8aa5';
+/* Colours are read from the stylesheet, which takes them from design/tokens.css (the Q. styleguide). */
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const TOPIC_COLORS = ['--topic-tech', '--topic-life', '--topic-health', '--topic-society'].map(css);   // physical, life, health, social
+const NO_TOPIC = css('--topic-none');
 const BG = new THREE.Color('#000000');
 const WHITE = new THREE.Color('#ffffff');
 const SEG = 14;                 // cylinder pieces per line, so lines can curve
@@ -96,7 +98,7 @@ const flecks = [];
 edges.forEach((e, k) => { const count = 1 + Math.round(3 * strength(e)); for (let j = 0; j < count; j++) flecks.push({ edge: k, u0: (j + (k * 0.37) % 1) / count, dir: (j + k) % 2 ? 1 : -1 }); });
 arcs.forEach((a, k) => flecks.push({ arc: k, u0: seeded(k + 3) }));
 const fleckCloud = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(flecks.length * 3), 3)),
-  new THREE.PointsMaterial({ map: glow, size: 2.4, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+  new THREE.PointsMaterial({ map: glow, color: css('--q-lime'), size: 2.6, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
 fleckCloud.frustumCulled = false; fleckCloud.renderOrder = 3; fleckCloud.visible = !calm;
 scene.add(fleckCloud);
 const curve = edges.map(() => new THREE.Vector3());   // bezier control point of every line, kept for the flecks
@@ -127,7 +129,7 @@ function buildMap() {
     g.rotateX(-Math.PI / 2);
     const m = new THREE.Mesh(g, material); m.position.y = y; group.add(m);
   };
-  const land = mat('#1c1830', 0.9), border = mat('#7e60e2', 0.75, THREE.LineBasicMaterial), water = mat('#2a86c8', 0.9);
+  const land = mat(new THREE.Color(css('--q-purple')).multiplyScalar(0.3), 0.95), border = mat(css('--q-purple-60'), 0.8, THREE.LineBasicMaterial), water = mat(css('--q-petrol'), 1);
   for (const d of wien.districts) {
     flat(d.ring, land, 0);
     group.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(d.ring.map(([x, z]) => new THREE.Vector3(x, 0.05, z))), border));
@@ -246,10 +248,9 @@ function paint() {
     m.emissiveIntensity = em && em.nodes.has(i) ? 0.6 : 0.35;
   });
   edges.forEach((e, k) => {
-    // a line runs from the colour of one place to the colour of the other. On black, darker reads
-    // as fainter: one-off partnerships recede, close ones shine
-    const from = meshes[e.a].userData.base, to = meshes[e.b].userData.base, shine = em ? 1 : 0.2 + 0.8 * strength(e);
-    for (let s = 0; s < SEG; s++) edgeMesh.setColorAt(k * SEG + s, tmpColor.copy(from).lerp(to, (s + 0.5) / SEG).lerp(WHITE, 0.25).multiplyScalar(shine));
+    // lines are white; on black, darker reads as fainter: one-off partnerships recede, close ones shine
+    tmpColor.copy(WHITE).multiplyScalar(em ? 1 : 0.13 + 0.87 * strength(e));
+    for (let s = 0; s < SEG; s++) edgeMesh.setColorAt(k * SEG + s, tmpColor);
   });
   edgeMesh.instanceColor.needsUpdate = true;
   placeEdges();
@@ -415,17 +416,17 @@ function renderPanel() {
   if (panel.hidden) return;
   const close = `<button type="button" class="btn close" id="panelClose" aria-label="${t('close')}">×</button>`;
   if (i === null) {
-    panel.innerHTML = `${close}<h2>${fill(t('listTitle'), facts())}</h2><p class="note">${fill(t('listNote'), facts())}</p>
-      <div class="rows" style="margin-top:14px">${nodes.map(n => `<button type="button" class="row" data-node="${n.i}">${dot(n.color)}<span>${esc(n.id)}</span><span class="n">${num(n.count)}</span></button>`).join('')}</div>`;
+    panel.innerHTML = `<div class="head on-light">${close}<h2>${fill(t('listTitle'), facts())}</h2><p class="also">${fill(t('listNote'), facts())}</p></div>
+      <div class="body"><div class="rows">${nodes.map(n => `<button type="button" class="row" data-node="${n.i}">${dot(n.color)}<span>${esc(n.id)}</span><span class="n">${num(n.count)}</span></button>`).join('')}</div></div>`;
   } else {
     const n = nodes[i], name = state.lang === 'de' ? n.name : n.en, sum = n.dom.reduce((a, b) => a + b, 0);
     const pct = Math.round(100 * n.joint / n.count);
     const mix = n.dom.map((v, d) => ({ v, d })).filter(x => x.v).sort((a, b) => b.v - a.v);
-    panel.innerHTML = `${close}<p class="kind">${t('kind')[n.type]}</p><h2>${esc(name)}</h2>
+    panel.innerHTML = `<div class="head on-light has-badge">${close}<p class="tag">${t('kind')[n.type]}</p><h2>${esc(name)}</h2>
       ${name !== n.id ? `<p class="also">${t('short')} ${esc(n.id)}</p>` : ''}
       ${n.members.length ? `<p class="also">${t('members')} ${esc(n.members.join(', '))}</p>` : ''}
-      <p class="hero"><span>${fill(t('heroUnit'), facts())}</span><b>${num(n.count)}</b></p>
-      <h3>${t('togetherTitle')}</h3>
+      <p class="badge"><b>${num(n.count)}</b><span>${fill(t('heroUnit'), facts())}</span></p></div>
+      <div class="body"><h3>${t('togetherTitle')}</h3>
       <div class="together"><i style="width:${pct}%"></i></div>
       <p class="note">${fill(t('togetherNote'), { n: `<b>${num(n.joint)}</b>`, pct })}${own(n) ? ' ' + fill(t('ringNote'), { n: num(own(n)) }) : ''}</p>
       ${sum ? `<h3>${t('topicsTitle')}</h3>
@@ -433,7 +434,7 @@ function renderPanel() {
       <ul class="mix-key">${mix.map(x => `<li>${dot(TOPIC_COLORS[x.d])}<span>${t('topics')[x.d]}</span><span class="n">${Math.round(100 * x.v / sum)} %</span></li>`).join('')}</ul>` : ''}
       <h3>${t('partnersTitle')}</h3>
       <div class="rows">${n.links.slice(0, 8).map(l => `<button type="button" class="row" data-node="${l.other}">${dot(nodes[l.other].color)}<span>${esc(nodes[l.other].id)}</span><span class="n">${num(l.n)}</span></button>`).join('')}</div>
-      <p class="note">${fill(t('partnersNote'), { n: n.links.length })}</p>`;
+      <p class="note">${fill(t('partnersNote'), { n: n.links.length })}</p></div>`;
   }
   panel.scrollTop = 0;
   $('panelClose').onclick = () => select(null);
