@@ -18,6 +18,7 @@
 <body>
   <canvas id="scene" aria-hidden="true"></canvas>
   <div id="labels" aria-hidden="true"></div>
+  <div id="eggs"></div>
 
   <header class="top">
     <div class="title">
@@ -45,6 +46,7 @@
     <p><span class="key-ball"></span><span data-t="keyBall"></span></p>
     <p><span class="key-line"></span><span data-t="keyLine"></span></p>
     <p><span class="key-ring"></span><span data-t="keyRing"></span></p>
+    <p class="found" id="foundCount" hidden></p>
   </section>
 
   <div class="band" aria-hidden="true"><div class="band-track" id="bandTrack"></div></div>
@@ -71,6 +73,11 @@
   </main>
 
   <div class="toast" id="toast" popover="manual" role="status"></div>
+
+  <dialog id="egg" class="on-light egg-card">
+    <div id="eggBody"></div>
+    <form method="dialog"><button class="btn primary" data-t="close"></button></form>
+  </dialog>
 
   <dialog id="about" class="on-light">
     <div id="aboutBody"></div>

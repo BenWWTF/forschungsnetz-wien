@@ -20,6 +20,7 @@ const SINCE = '2026-04-13';          // first complete week in the dataset, same
 const KM = 5;                        // scene units per kilometre in the city view
 const CENTRE = { lat: 48.2083, lon: 16.3731 };   // Stephansplatz
 const CITY_SCALE = 0.6;            // spheres shrink over the map, where they sit closer together
+const Q_SITE = { lat: 48.2083572, lon: 16.3776293 };   // Wollzeile 27a, where the exhibition stands (geocoded with Nominatim)
 const DOMAINS = ['Physical Sciences', 'Life Sciences', 'Health Sciences', 'Social Sciences'];
 
 fs.mkdirSync(CACHE, { recursive: true });
@@ -173,7 +174,7 @@ function buildMap() {
     .flatMap(f => parts(f.geometry, 'LineString').map(l => ({ w: WIDTH[f.properties.NAME] * KM, line: line(l, 0.08) })));
   const lakes = geo('STEHENDEGEWOGD').filter(f => f.properties.NAME === 'Alte Donau')
     .flatMap(f => parts(f.geometry, 'Polygon').map(poly => line(poly[0], 0.08)));
-  return { districts, rivers, lakes };
+  return { districts, rivers, lakes, q: project(Q_SITE.lat, Q_SITE.lon).map(round2) };
 }
 
 function centroid(ring) {

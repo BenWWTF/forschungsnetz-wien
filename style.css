@@ -77,6 +77,26 @@ h1 { font-size: clamp(26px, 3.6vw, 48px); line-height: 1.02; }
 .band-track { display: flex; flex-shrink: 0; white-space: nowrap; font: 600 20px var(--q-font-headline); animation: band 60s linear infinite; }
 .band-track span { padding: 0 44px; }
 @keyframes band { to { transform: translateX(-50%); } }
+/* "you are here" on the city map */
+.lbl.here { padding: 3px 12px 3px 10px; border-radius: var(--q-radius-tail); background: var(--q-lime); color: var(--q-black); font-size: 15px; font-weight: 600; text-shadow: none; }
+/* easter eggs: a small object beside a sphere, shown once the visitor is close */
+#eggs { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.egg { position: absolute; left: 0; top: 0; width: 48px; height: 48px; padding: 9px; border: 2px solid var(--q-black); border-radius: 50%; background: var(--q-white); color: var(--q-black); cursor: pointer; pointer-events: auto; animation: egg 2.4s ease-in-out infinite; }
+.egg svg { display: block; width: 100%; height: 100%; }
+.egg.done { background: var(--q-lime); }
+.egg[hidden] { display: none; }
+.egg:focus-visible { outline: 3px solid var(--q-white); outline-offset: 2px; }
+@keyframes egg { 50% { margin-top: -5px; } }
+body.still .egg { animation: none; }
+.egg-card { text-align: left; }
+.egg-card .art { width: 132px; height: 132px; margin: 14px 0 6px; padding: 26px; border-radius: 50%; background: var(--q-lime); }
+.egg-card .art svg { display: block; width: 100%; height: 100%; }
+.egg-card h2 { margin: 10px 0 6px; }
+.egg-card p + p { margin-top: 10px; }
+.egg-card .all { font: 600 17px var(--q-font-intro); }
+.egg-row { background: var(--q-lime); color: var(--q-black); grid-template-columns: 1fr; font-weight: 600; }
+.legend p.found { display: flex; margin-top: 8px; }
+.legend p.found[hidden] { display: none; }
 .short { display: none; }
 body.still .band-track { animation-play-state: paused; }
 #homeBtn { display: inline-flex; align-items: center; gap: 8px; }
@@ -161,6 +181,7 @@ dialog form { position: sticky; bottom: 0; margin-top: 12px; padding: 12px 0 18p
   .legend { font-size: 13px; left: var(--edge); right: var(--edge); bottom: calc(max(14px, env(safe-area-inset-bottom)) + 62px); }
   .legend ul { display: grid; grid-template-columns: auto auto; justify-content: center; gap: 4px 18px; }
   .legend p { display: none; }
+  .legend p.found { display: flex; justify-content: center; margin: 0 0 4px; order: -1; }
   .dock { left: var(--edge); right: var(--edge); bottom: max(14px, env(safe-area-inset-bottom)); transform: none; justify-content: center; gap: 8px; }
   .dock .btn { padding: 0 16px; }
   .controls { flex-wrap: wrap; gap: 8px; }
@@ -182,6 +203,12 @@ dialog form { position: sticky; bottom: 0; margin-top: 12px; padding: 12px 0 18p
   .tour #tourBody { font-size: 17px; }
   dialog { padding: 20px 20px 0; max-height: calc(100dvh - 24px); }
   body.busy .legend, body.busy .dock { display: none; }
+  /* upright wall screen: the switches sit in a row of their own above the buttons */
+  .kiosk .controls { left: var(--edge); right: var(--edge); bottom: calc(max(14px, env(safe-area-inset-bottom)) + 60px); justify-content: center; }
+  .kiosk .legend { bottom: calc(max(14px, env(safe-area-inset-bottom)) + 124px); }
+  .kiosk .hint { bottom: calc(max(14px, env(safe-area-inset-bottom)) + 188px); }
+  .kiosk .panel { bottom: 0; }
+  .kiosk.busy .controls { display: none; }
 }
 /* Phone on its side: too little height for a bottom card, so cards take the right edge. */
 @media (max-height: 520px) and (orientation: landscape) {
@@ -212,4 +239,4 @@ dialog form { position: sticky; bottom: 0; margin-top: 12px; padding: 12px 0 18p
   .tour-nav { flex-wrap: wrap; }
   body.busy .dock, body.busy .controls, body.busy .legend { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .lbl { transition: none; } .band-track { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .lbl { transition: none; } .band-track, .egg { animation: none; } }

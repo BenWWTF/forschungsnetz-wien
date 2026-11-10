@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { STRINGS, TOUR, aboutHtml } from './texts.js';
+import { STRINGS, TOUR, EGGS, aboutHtml } from './texts.js';
 
 /* Colours are read from the stylesheet, which takes them from design/tokens.css (the Q. styleguide). */
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -44,6 +44,7 @@ edges.forEach(e => { nodes[e.a].links.push({ other: e.b, n: e.n }); nodes[e.b].l
 nodes.forEach(n => n.links.sort((x, y) => y.n - x.n));
 const own = n => n.count - n.joint;   // published without another Vienna institution: drawn as small arcs that leave the sphere and fall back to it
 
+if (new URLSearchParams(location.search).has('kiosk')) document.body.classList.add('kiosk');   // wall screen: every control within a child's reach, and the marker may say "you are here"
 const state = { lang: 'de', view: 'net', mix: 0, selected: null, hovered: null, tour: null, list: false, emph: null };
 
 // ── scene ──────────────────────────────────────────────────────────────────────────────────
@@ -133,6 +134,11 @@ scene.add(stalks);
 const map = buildMap();
 scene.add(map.group);
 
+/* The Q. itself on the city map: a Lime pin where the exhibition stands. */
+const herePin = new THREE.Mesh(new THREE.ConeGeometry(1.4, 5, 24), new THREE.MeshBasicMaterial({ color: css('--q-lime'), transparent: true, opacity: 0 }));
+herePin.rotation.x = Math.PI; herePin.position.set(wien.q[0], 2.5, wien.q[1]); herePin.visible = false;
+scene.add(herePin);
+
 function buildMap() {
   const group = new THREE.Group(), fades = [];
   const mat = (color, opacity, Type = THREE.MeshBasicMaterial) => {
@@ -189,6 +195,7 @@ function placeNodes(time) {
   at.needsUpdate = true;
   stalks.material.opacity = 0.55 * t * t; stalks.visible = t > 0.01;
   map.fade(t);
+  herePin.visible = t > 0.01; herePin.material.opacity = t;
   placeEdges();
 }
 
@@ -339,7 +346,30 @@ function setView(view) {
 const labelBox = $('labels');
 const labels = nodes.map(n => { const el = document.createElement('div'); el.className = 'lbl'; el.textContent = n.id; labelBox.append(el); return { el, w: 0, h: 0 }; });
 const districtLabels = wien.districts.map(d => { const el = document.createElement('div'); el.className = 'lbl district'; el.textContent = d.nr + '.'; labelBox.append(el); return { el, at: new THREE.Vector3(d.at[0], 0, d.at[1]) }; });
+const hereLabel = document.createElement('div'); hereLabel.className = 'lbl here'; labelBox.append(hereLabel);
+const hereTop = new THREE.Vector3(wien.q[0], 5.4, wien.q[1]);
 const screen = nodes.map(() => ({ x: 0, y: 0, r: 0, depth: 0, visible: false }));
+
+/* Easter eggs: a button beside its sphere, shown once the camera is close to that place. */
+const eggs = EGGS.map(e => ({ ...e, i: nodes.findIndex(n => n.id === e.node) })).filter(e => e.i >= 0);
+const found = new Set();
+eggs.forEach((egg, k) => {
+  egg.el = document.createElement('button'); egg.el.type = 'button'; egg.el.className = 'egg'; egg.el.hidden = true; egg.el.innerHTML = egg.icon;
+  egg.el.onclick = () => openEgg(k);
+  $('eggs').append(egg.el);
+});
+function placeEggs() {
+  const em = state.emph, card = $('panel').hidden ? null : $('panel').getBoundingClientRect();
+  const free = (x, y) => x >= 4 && x <= W - 52 && y >= 100 && y <= H - 64 && !(card && x + 48 > card.left && y + 48 > card.top && x < card.right);
+  for (const egg of eggs) {
+    const s = screen[egg.i], d = s.r * 0.75 + 4;
+    // shown for the place a visitor has opened, or when the camera has come close on its own
+    const near = s.visible && state.tour === null && (em ? em.nodes.has(egg.i) : camera.position.distanceTo(cur[egg.i]) < 110);
+    const spot = near && [[d, -d - 48], [-d - 48, -d - 48], [d, d], [-d - 48, d]].map(([dx, dy]) => [s.x + dx, s.y + dy]).find(([x, y]) => free(x, y));   // a corner of the sphere that is not covered
+    egg.el.hidden = !spot;
+    if (spot) egg.el.style.transform = `translate(${Math.round(spot[0])}px,${Math.round(spot[1])}px)`;
+  }
+}
 let W = 1, H = 1;
 
 function project() {
@@ -374,6 +404,11 @@ function drawLabels() {
     l.el.classList.toggle('dark', inside && nodes[i].light);
   }
   labels.forEach((l, i) => l.el.classList.toggle('on', shown.has(i)));
+  tmpA.copy(hereTop).project(camera);
+  const hereOn = state.mix > 0.6 && tmpA.z < 1;
+  hereLabel.classList.toggle('on', hereOn);
+  if (hereOn) hereLabel.style.transform = `translate(${Math.round((tmpA.x + 1) / 2 * W - hereLabel.offsetWidth / 2)}px,${Math.round((1 - tmpA.y) / 2 * H - hereLabel.offsetHeight - 2)}px)`;
+  placeEggs();
   const districtsOn = state.mix > 0.6;
   for (const d of districtLabels) {
     tmpA.copy(d.at).project(camera);
@@ -455,6 +490,27 @@ function toast(text, ms) {
   if (ms) toastTimer = setTimeout(() => toast(null), ms);
 }
 
+function showFound() {
+  const el = $('foundCount'); el.hidden = !found.size;
+  el.textContent = '★ ' + fill(t('eggCount'), { n: found.size, all: eggs.length });
+  eggs.forEach((egg, k) => { egg.el.classList.toggle('done', found.has(k)); egg.el.setAttribute('aria-label', `${t('eggLabel')}: ${egg[state.lang].title}`); });
+}
+function openEgg(k) {
+  const egg = eggs[k]; found.add(k); showFound();
+  $('eggBody').innerHTML = `<p><span class="tag">${fill(t('eggFound'), { n: found.size, all: eggs.length })}</span></p><div class="art">${egg.icon}</div>
+    <h2>${egg[state.lang].title}</h2>${egg[state.lang].text.map(p => `<p>${p}</p>`).join('')}${found.size === eggs.length ? `<p class="all">${t('eggAll')}</p>` : ''}`;
+  if (!$('egg').open) $('egg').showModal();
+}
+/* Five quick taps on the Q. give away where something is still hidden. */
+let logoTaps = [];
+document.querySelector('.mark').addEventListener('click', () => {
+  const now = performance.now(); logoTaps = [...logoTaps.filter(x => now - x < 3000), now];
+  if (logoTaps.length < 5) return;
+  logoTaps = [];
+  const next = eggs.find((_, k) => !found.has(k));
+  toast(next ? fill(t('eggHint'), { place: nodes[next.i].id }) : t('eggAll'), 5000);
+});
+
 let opener = null;   // what had focus before a card opened, to hand it back on closing
 function select(i) {
   if (i === null && state.selected === null && !state.list) return;
@@ -500,8 +556,11 @@ function renderPanel(takeFocus = false) {
   const filter = $('listFilter');
   if (filter) filter.oninput = () => {
     const q = filter.value.trim().toLowerCase(); let any = false;
-    panel.querySelectorAll('.row').forEach(row => { const n = nodes[+row.dataset.node], show = !q || [n.id, n.name, n.en].some(x => x.toLowerCase().includes(q)); row.hidden = !show; any ||= show; });
-    $('noMatch').hidden = any;
+    panel.querySelectorAll('.row[data-node]').forEach(row => { const n = nodes[+row.dataset.node], show = !q || [n.id, n.name, n.en].some(x => x.toLowerCase().includes(q)); row.hidden = !show; any ||= show; });
+    const egg = q.length >= 3 ? eggs.findIndex(e => e.keys.some(key => key.startsWith(q) || q.includes(key))) : -1;   // a few words open a hidden door
+    panel.querySelector('.egg-row')?.remove();
+    if (egg >= 0) { const row = document.createElement('button'); row.type = 'button'; row.className = 'row egg-row'; row.textContent = t('eggRow'); row.onclick = () => openEgg(egg); panel.querySelector('.rows').prepend(row); }
+    $('noMatch').hidden = any || egg >= 0;
   };
   $('panelClose').onclick = () => select(null);
   panel.querySelectorAll('[data-node]').forEach(b => { b.onclick = () => select(+b.dataset.node); });
@@ -543,6 +602,8 @@ function applyTexts() {
   $('subtitle').textContent = fill(t('subtitle'), facts());
   $('bandTrack').innerHTML = [0, 1].map(() => t('band').map(item => `<span>${fill(item, facts())}</span>`).join('')).join('');   // twice, for a seamless loop
   $('legendTopics').innerHTML = TOPIC_COLORS.map((c, d) => `<li>${dot(c)}${t('topics')[d]}</li>`).join('');
+  hereLabel.textContent = t(document.body.classList.contains('kiosk') ? 'youAreHere' : 'qIsHere');
+  showFound();
   $('aboutBody').innerHTML = aboutHtml(state.lang, { ...facts(), to: new Date(graph.to).toLocaleDateString(state.lang === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) });
   renderPanel();
   if (state.tour !== null) showTour(state.tour);
@@ -570,19 +631,20 @@ function setStill(on) {
 }
 $('pause').onclick = () => setStill(!still);
 $('aboutOpen').onclick = () => $('about').showModal();
-addEventListener('keydown', e => { if (e.key === 'Escape' && !$('about').open) { if (state.tour !== null) showTour(null); else if (state.selected !== null || state.list) select(null); } });
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('about').open && !$('egg').open) { if (state.tour !== null) showTour(null); else if (state.selected !== null || state.list) select(null); } });
 
 /* An exhibit must find its way back to the start when a visitor walks off: first a warning
    with a countdown, then everything returns to the opening state, the language included. */
 const WARN_MS = Math.min(15_000, IDLE_MS / 2);
 function resetIfIdle(now) {
   const idle = now - lastInput;
-  const touched = state.tour !== null || state.selected !== null || state.list || state.view !== 'net' || state.lang !== 'de' || $('about').open
+  const touched = state.tour !== null || state.selected !== null || state.list || state.view !== 'net' || state.lang !== 'de' || $('about').open || $('egg').open || found.size > 0
     || camera.position.distanceTo(tmpA.set(...HOME.net.pos)) > 150;
   if (!touched || idle < IDLE_MS - WARN_MS) { if (warned) { warned = false; toast(null); } return; }
   if (idle < IDLE_MS) { warned = true; toast(fill(t('idleNote'), { s: Math.ceil((IDLE_MS - idle) / 1000) })); return; }
   lastInput = now; warned = false; toast(null);
-  $('about').close();
+  $('about').close(); $('egg').close();
+  found.clear(); showFound();
   document.body.classList.remove('used');
   if (state.lang !== 'de') { state.lang = 'de'; applyTexts(); }
   if (state.tour !== null) showTour(null); else { setView('net'); if (state.selected !== null || state.list) select(null); else flyHome(); }
@@ -622,7 +684,6 @@ function frame(now) {
   resetIfIdle(now);
 }
 
-if (new URLSearchParams(location.search).has('kiosk')) document.body.classList.add('kiosk');   // wall screen: every control within a child's reach
 document.fonts.ready.then(() => labels.forEach(l => { l.w = 0; }));   // label widths were measured in the fallback font
 resize();
 { const [pos, target] = home(); camera.position.copy(pos); controls.target.copy(target); }
