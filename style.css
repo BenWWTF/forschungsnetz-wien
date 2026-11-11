@@ -1,3 +1,5 @@
+@font-face { font-family: "PP Radio Grotesk"; font-weight: 400; font-display: swap; src: url("fonts/PPRadioGrotesk-Regular.woff2") format("woff2"); }
+@font-face { font-family: "PP Radio Grotesk"; font-weight: 700; font-display: swap; src: url("fonts/PPRadioGrotesk-Bold.woff2") format("woff2"); }
 /* Brand values come from design/tokens.css (the Q. styleguide). This file only assigns them to roles.
    Two rules of the styleguide shape everything below: text is black or white, never coloured;
    black on Lime, white on Berry. */

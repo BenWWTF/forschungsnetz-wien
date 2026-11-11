@@ -8,5 +8,6 @@ design/index.html
 design/tokens.json
 build/tokens.mjs
 
-# Q. typefaces: licensed files, local only
-fonts/
+# Clash files stay local (Fontshare licence); PP Radio Grotesk is published with the Q.'s consent
+fonts/*
+!fonts/PPRadioGrotesk-*.woff2

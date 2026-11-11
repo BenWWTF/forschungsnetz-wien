@@ -17,9 +17,10 @@ No build step for the site itself: plain HTML, CSS and ES modules, three.js vend
 The look follows the Q. brand. `design/tokens.css` holds the brand values as CSS variables; `style.css` assigns
 them to roles and `app.js` reads its colours from there.
 
-Typefaces: Clash Display and Clash Grotesk come from Fontshare. If a local `fonts/` folder exists (gitignored,
-see `fonts/fonts.css`), its files take precedence, so the page also works offline and sets copy text in
-PP Radio Grotesk. The font files are not in this repository because their licences do not allow public hosting.
+Typefaces: Clash Display and Clash Grotesk come from Fontshare; local copies in `fonts/` (gitignored, their
+licence does not allow public hosting) take precedence when present, so the page also works offline.
+PP Radio Grotesk in `fonts/` is a licensed Pangram Pangram typeface, used here with the Q.'s consent.
+It is not free to reuse.
 
 ## Hidden things
 
