@@ -156,7 +156,29 @@ function layoutCity(nodes) {
     return [x, n.r * CITY_SCALE + 1 + 13 * Math.sqrt(n.count / maxCount), z];
   });
   separate(pos, nodes.map(n => n.r * CITY_SCALE), 0.8, [1]);   // push apart vertically only
+  // The Academy of Sciences stood half behind TU Wien, its bigger neighbour to the south.
+  unhide(pos, nodes.map(n => n.r * CITY_SCALE), 0.3, nodes.findIndex(n => n.id === 'OeAW'));
   nodes.forEach((n, i) => { n.city = pos[i]; n.ground = [round2(pos[i][0]), round2(pos[i][2])]; });
+}
+
+/* Lifts one sphere until, seen from the start view of the map (camera at [0, 100, 142] from its
+   target), it neither hides behind another sphere nor covers one. Height is the free dimension
+   in the city view; the address on the ground stays where it is. */
+function unhide(pos, radii, gap, i) {
+  const view = [0, 100, 142], vl = Math.hypot(...view), v = view.map(c => c / vl);
+  const up = [-v[1] * v[0], 1 - v[1] * v[1], -v[1] * v[2]], up2 = 1 - v[1] * v[1];   // "up" as the camera sees it
+  for (let pass = 0, moved = true; moved && pass < 100; pass++) {
+    moved = false;
+    for (let j = 0; j < pos.length; j++) {
+      if (j === i) continue;
+      const min = radii[i] + radii[j] + gap, d = sub(pos[i], pos[j]), along = d[0] * v[0] + d[1] * v[1] + d[2] * v[2];
+      const flat = d.map((c, k) => c - along * v[k]), len2 = flat[0] ** 2 + flat[1] ** 2 + flat[2] ** 2;
+      if (len2 >= min * min) continue;
+      const dot = flat[0] * up[0] + flat[1] * up[1] + flat[2] * up[2];
+      pos[i][1] += (-dot + Math.sqrt(dot * dot + up2 * (min * min - len2))) / up2 + 0.01;
+      moved = true;
+    }
+  }
 }
 
 function separate(pos, radii, gap, axes) {

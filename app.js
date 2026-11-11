@@ -435,9 +435,15 @@ function drawLabels() {
     if (!l.w) { l.w = l.el.offsetWidth; l.h = l.el.offsetHeight; }
     const strong = em ? em.nodes.has(i) : false, scale = strong ? 1.2 : 1;
     const inside = s.r * 2 > l.w * scale + 10;   // a sphere wide enough carries its own name
-    const box = { x: s.x - l.w * scale / 2, y: inside ? s.y - l.h * scale / 2 : s.y + s.r + 4, w: l.w * scale, h: l.h * scale };
-    if (box.x < 4 || box.x + box.w > W - 4 || box.y < 0 || box.y + box.h > H) continue;   // never show half a name
-    if (placed.some(p => box.x < p.x + p.w + 6 && p.x < box.x + box.w + 6 && box.y < p.y + p.h && p.y < box.y + box.h)) continue;
+    const w = l.w * scale, h = l.h * scale;
+    const fits = b => b.x >= 4 && b.x + w <= W - 4 && b.y >= 0 && b.y + h <= H   // never show half a name
+      && !placed.some(p => b.x < p.x + p.w + 6 && p.x < b.x + w + 6 && b.y < p.y + p.h && p.y < b.y + h);
+    const clear = b => !screen.some((o, j) => j !== i && o.visible && o.x + o.r > b.x && o.x - o.r < b.x + w && o.y + o.r > b.y && o.y - o.r < b.y + h);
+    const under = { x: s.x - w / 2, y: inside ? s.y - h / 2 : s.y + s.r + 4 }, beside = { x: s.x + s.r + 6, y: s.y - h / 2 };
+    // In or under the sphere; if that is taken, beside it, as long as the name does not land on another sphere.
+    const at = fits(under) ? under : !inside && fits(beside) && clear(beside) ? beside : null;
+    if (!at) continue;
+    const box = { ...at, w, h };
     placed.push(box); shown.add(i);
     l.el.style.transform = `translate(${Math.round(box.x)}px,${Math.round(box.y)}px)`;
     l.el.classList.toggle('strong', strong);
