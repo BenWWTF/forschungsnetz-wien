@@ -130,6 +130,21 @@ function layoutNetwork(nodes, edges) {
     }
     pos.forEach((p, i) => { for (let c = 0; c < 3; c++) p[c] += move[i][c] * alpha; onShell(p); });
   }
+  /* Where a place sits on the sphere carries no meaning, only who is near whom. So the whole
+     network may be turned as one piece: here so that the Academy of Sciences faces the visitor
+     in the start view (the camera looks from [0, 51, 262] relative to its target). */
+  const front = [0, 51, 262], fl = Math.hypot(...front), b = front.map(v => v / fl);
+  const a = pos[nodes.findIndex(n => n.id === 'OeAW')].map(v => v / R);
+  const axis = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const sin = Math.hypot(...axis), cos = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  if (sin > 1e-6) {
+    const k = axis.map(v => v / sin);
+    pos.forEach(p => {   // Rodrigues' rotation
+      const kxp = [k[1] * p[2] - k[2] * p[1], k[2] * p[0] - k[0] * p[2], k[0] * p[1] - k[1] * p[0]];
+      const kp = (k[0] * p[0] + k[1] * p[1] + k[2] * p[2]) * (1 - cos);
+      for (let c = 0; c < 3; c++) p[c] = p[c] * cos + kxp[c] * sin + k[c] * kp;
+    });
+  }
   nodes.forEach((n, i) => { n.net = pos[i]; });
 }
 
