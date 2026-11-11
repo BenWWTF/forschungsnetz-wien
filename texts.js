@@ -4,10 +4,10 @@ export const STRINGS = {
   de: {
     docTitle: 'Wer forscht mit wem in Wien? Ein Netz in 3D',
     title: 'Wer forscht mit wem in Wien?',
-    subtitle: '{places} Forschungsorte, {pairs} Verbindungen. Dreh das Netz und tippe auf eine Kugel.',
+    subtitle: '{places} Forschungsorte, {pairs} Verbindungen. Tippe auf eine Kugel, oder halte sie fest und zieh daran.',
     viewLabel: 'Ansicht', viewNet: 'Netz', viewCity: 'Stadtplan', legendLabel: 'Legende',
     pause: 'Bewegung anhalten', play: 'Bewegung fortsetzen', home: 'Überblick', tourShort: 'So geht’s',
-    hint: 'Dreh das Netz und tippe auf eine Kugel', crowd: 'Hier liegen mehrere Orte dicht beisammen. Näher ran!',
+    hint: 'Tippe auf eine Kugel, oder halte sie fest und zieh', crowd: 'Hier liegen mehrere Orte dicht beisammen. Näher ran!',
     idleNote: 'Noch da? Tippe irgendwo, sonst beginnt alles in {s} Sekunden von vorn.',
     eggLabel: 'Etwas Verstecktes', eggFound: 'Gefunden! {n} von {all}', eggAll: 'Du hast alles Versteckte gefunden.', eggLast: 'Das letzte Versteck',
     eggNext: 'Alles gefunden? Fast. Gerade ist noch etwas aufgetaucht: Sieh bei „{place}“ nach.',
@@ -37,10 +37,10 @@ export const STRINGS = {
   en: {
     docTitle: 'Who does research with whom in Vienna? A network in 3D',
     title: 'Who does research with whom in Vienna?',
-    subtitle: '{places} research places, {pairs} connections. Spin the network and tap a sphere.',
+    subtitle: '{places} research places, {pairs} connections. Tap a sphere, or hold it and pull.',
     viewLabel: 'View', viewNet: 'Network', viewCity: 'City map', legendLabel: 'Legend',
     pause: 'Pause motion', play: 'Resume motion', home: 'Overview', tourShort: 'How to',
-    hint: 'Spin the network and tap a sphere', crowd: 'Several places sit close together here. Moving in!',
+    hint: 'Tap a sphere, or hold it and pull', crowd: 'Several places sit close together here. Moving in!',
     idleNote: 'Still there? Tap anywhere, or everything starts over in {s} seconds.',
     eggLabel: 'Something hidden', eggFound: 'Found! {n} of {all}', eggAll: 'You have found everything that was hidden.', eggLast: 'The last hiding place',
     eggNext: 'Found everything? Almost. Something else has just turned up: look at “{place}”.',
@@ -108,8 +108,8 @@ export const TOUR = [
     de: { title: 'Große Kugel, viele Veröffentlichungen', body: ['Wer etwas Neues herausfindet, schreibt es auf, damit andere es nachlesen und überprüfen können. Das nennt man eine Veröffentlichung.', 'Je mehr Veröffentlichungen ein Ort seit {since} hat, desto größer ist seine Kugel. Die größte gehört zu „{big}“: {bigCount}.'] },
     en: { title: 'Big sphere, many publications', body: ['When researchers find out something new, they write it down so that others can read and check it. That is called a publication.', 'The more publications a place has had since {since}, the bigger its sphere. The biggest one belongs to “{big}”: {bigCount}.'] } },
   { show: 'pair',
-    de: { title: 'Eine Linie heißt: gemeinsam geforscht', body: ['Forschung ist Teamarbeit. Eine Linie verbindet zwei Orte, wenn Menschen von beiden zusammen etwas veröffentlicht haben. Je dicker und heller die Linie, desto öfter. Kleine Bögen, die zur selben Kugel zurückführen, stehen für das, was ein Ort ohne Wiener Partner veröffentlicht hat: je mehr Bögen, desto mehr.', 'Die dickste Linie verbindet „{pairA}“ und „{pairB}“: {pairCount} gemeinsame Veröffentlichungen.'] },
-    en: { title: 'A line means: researched together', body: ['Research is teamwork. A line joins two places when people from both have published something together. The thicker and brighter the line, the more often. Small arcs that fall back to the same sphere stand for what a place has published without a partner in Vienna: the more arcs, the more.', 'The thickest line joins “{pairA}” and “{pairB}”: {pairCount} joint publications.'] } },
+    de: { title: 'Eine Linie heißt: gemeinsam geforscht', body: ['Forschung ist Teamarbeit. Eine Linie verbindet zwei Orte, wenn Menschen von beiden zusammen etwas veröffentlicht haben. Je dicker und heller die Linie, desto öfter. Kleine Bögen, die zur selben Kugel zurückführen, stehen für das, was ein Ort ohne Wiener Partner veröffentlicht hat: je mehr Bögen, desto mehr.', 'Die dickste Linie verbindet „{pairA}“ und „{pairB}“: {pairCount} gemeinsame Veröffentlichungen.', 'Probier es später aus: Halte eine Kugel fest und zieh daran. Die verbundenen Orte bewegen sich mit, und ein großer Ort zieht stärker als ein kleiner.'] },
+    en: { title: 'A line means: researched together', body: ['Research is teamwork. A line joins two places when people from both have published something together. The thicker and brighter the line, the more often. Small arcs that fall back to the same sphere stand for what a place has published without a partner in Vienna: the more arcs, the more.', 'The thickest line joins “{pairA}” and “{pairB}”: {pairCount} joint publications.', 'Try it later: hold a sphere and pull. The connected places move along, and a big place pulls harder than a small one.'] } },
   { show: 'topics',
     de: { title: 'Die Farbe zeigt das Thema', body: ['Jede Kugel hat die Farbe des Themas, zu dem dort am meisten veröffentlicht wird. Viele Orte forschen aber an mehreren Themen. Tippe später auf eine Kugel, dann siehst du die ganze Mischung.'] },
     en: { title: 'Colour shows the topic', body: ['Each sphere has the colour of the topic it publishes on most. Many places work on several topics, though. Tap a sphere later to see the whole mix.'] } },
@@ -133,6 +133,7 @@ export function aboutHtml(lang, f) {
     <li>Das Volumen einer Kugel wächst mit der Zahl der Veröffentlichungen, die Dicke einer Linie mit der Zahl der gemeinsamen.</li>
     <li>Die kleinen Bögen an einer Kugel zeigen, wie viel ein Ort ohne anderen Wiener Forschungsort veröffentlicht hat: ein bis sieben Bögen, in logarithmischen Stufen. Partner außerhalb Wiens können trotzdem beteiligt sein.</li>
     <li>Die wandernden Lichtpunkte auf den Linien sind Schmuck und zeigen keine Daten.</li>
+    <li>Zieht man an einer Kugel, bewegen sich die verbundenen Orte mit: stärker entlang dicker Linien, und ein großer Ort zieht einen kleinen stärker mit als umgekehrt. Das ist ein Bild dafür, dass Veränderungen an einem Ort die anderen erreichen. Gemessen ist diese Wirkung nicht.</li>
     <li>Dachorganisationen sind zu einer Kugel zusammengefasst und stehen im Stadtplan an ihrem Hauptsitz.</li>
     <li>Im Netz sitzen alle Orte auf der Oberfläche einer Kugel, eng verbundene näher beisammen. Die Lage hat sonst keine Bedeutung.</li></ul>
     <h3>Quellen</h3>
@@ -146,6 +147,7 @@ export function aboutHtml(lang, f) {
     <li>The volume of a sphere grows with the number of publications, the thickness of a line with the number of joint ones.</li>
     <li>The small arcs on a sphere show how much a place has published without another research place in Vienna: one to seven arcs, in logarithmic steps. Partners outside Vienna may still be involved.</li>
     <li>The travelling lights on the lines are decoration and carry no data.</li>
+    <li>Pull a sphere and the connected places move along: more along thick lines, and a big place pulls a small one more than the other way round. It is a picture of how change in one place reaches the others. This effect is not measured.</li>
     <li>Umbrella organisations are merged into one sphere and sit at their head office on the city map.</li>
     <li>In the network, all places sit on the surface of a sphere, closely linked ones nearer to each other. Position has no other meaning.</li></ul>
     <h3>Sources</h3>

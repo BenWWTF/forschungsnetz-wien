@@ -176,13 +176,45 @@ const dummy = new THREE.Object3D(), tmpColor = new THREE.Color();
 const radiusNow = n => n.r * (1 - (1 - graph.cityScale) * state.mix);
 const bezier = (a, ctrl, b, u, out) => out.copy(a).multiplyScalar((1 - u) * (1 - u)).addScaledVector(ctrl, 2 * u * (1 - u)).addScaledVector(b, u * u);
 
+/* Pull one, and the others feel it. Every sphere may be displaced from its resting place (`off`).
+   A spring pulls it home, and every line passes on part of its neighbour's displacement: more
+   along a strong partnership, and more from a big place to a small one than the other way round.
+   Nothing here is measured; it is a picture of how a change in one place reaches the rest. */
+const off = nodes.map(() => new THREE.Vector3()), vel = nodes.map(() => new THREE.Vector3()), acc = nodes.map(() => new THREE.Vector3());
+const rest = nodes.map(() => new THREE.Vector3());
+const mass = nodes.map(n => n.r * n.r);
+const K_HOME = 22, K_LINK = 26, REACH = 55;
+let grab = null;   // { i, plane, target } while a sphere is held
+function ripple(dt) {
+  if (!grab && !ripple.live) return false;
+  const damping = still ? 9.5 : 6;   // a little wobble on the way home, none when motion is reduced
+  nodes.forEach((_, i) => acc[i].copy(off[i]).multiplyScalar(-K_HOME).addScaledVector(vel[i], -damping));
+  for (const e of edges) {
+    const w = strength(e), pull = K_LINK * (0.08 + 0.92 * w * w),   // squared: close partners follow clearly more than loose ones
+      d = tmpA.subVectors(off[e.b], off[e.a]), sum = mass[e.a] + mass[e.b];
+    acc[e.a].addScaledVector(d, pull * mass[e.b] / sum);    // the heavier partner moves the lighter one
+    acc[e.b].addScaledVector(d, -pull * mass[e.a] / sum);
+  }
+  let energy = 0;
+  nodes.forEach((n, i) => {
+    if (grab && grab.i === i) {   // the held sphere follows the finger, a big one more sluggishly
+      off[i].lerp(grab.target, 1 - Math.exp(-dt * (26 - 2.2 * n.r))); vel[i].set(0, 0, 0);
+    } else { vel[i].addScaledVector(acc[i], dt); off[i].addScaledVector(vel[i], dt); }
+    energy += off[i].lengthSq() + vel[i].lengthSq();
+  });
+  ripple.live = grab !== null || energy > 0.002;
+  if (!ripple.live) { off.forEach(o => o.set(0, 0, 0)); vel.forEach(v => v.set(0, 0, 0)); placed = false; }   // settle exactly at rest
+  return ripple.live;
+}
+
 function placeNodes(time) {
   const t = state.mix, at = stalks.geometry.attributes.position;
   const sway = still ? 0 : 1.6 * (1 - t);   // the network breathes; above the map the addresses hold still
   nodes.forEach((n, i) => {
     const p = cur[i].set(...n.net).lerp(tmpA.set(...n.city), t), r = radiusNow(n);
     if (sway) { p.x += sway * Math.sin(time * 0.0006 + i * 1.7); p.y += sway * Math.sin(time * 0.0005 + i * 2.3); p.z += sway * Math.sin(time * 0.0007 + i * 0.9); }
-    meshes[i].position.copy(p); meshes[i].scale.setScalar(r);
+    rest[i].copy(p); p.add(off[i]);
+    meshes[i].position.copy(p); meshes[i].scale.setScalar(grab && grab.i === i ? r * 1.12 : r);
     rims[i].position.copy(p); rims[i].scale.setScalar(r + 0.28);
     outward[i].copy(p).normalize().lerp(UP, t).normalize();
     at.setXYZ(2 * i, n.ground[0], 0, n.ground[1]);
@@ -458,12 +490,44 @@ function tap(x, y) {
 
 let down = null, lastInput = performance.now();
 const canvas = renderer.domElement;
-canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; flight = null; document.body.classList.add('used'); });
+/* Hold a sphere for a moment, then drag: it moves in the plane facing the viewer. A quick drag
+   still turns the whole network, a short tap still opens the place. */
+const HOLD_MS = 170, ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let holdTimer = null;
+function pointOnPlane(e, plane, out) {
+  ndc.set(e.clientX / W * 2 - 1, 1 - e.clientY / H * 2); ray.setFromCamera(ndc, camera);
+  return ray.ray.intersectPlane(plane, out);
+}
+function startGrab(i, e) {
+  const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), cur[i]);
+  const hit = pointOnPlane(e, plane, new THREE.Vector3()); if (!hit) return;
+  grab = { i, plane, target: off[i].clone(), slip: cur[i].clone().sub(hit) };   // slip: where on the sphere the finger landed
+  controls.enabled = false; flight = null; down = null;
+  canvas.classList.add('grabbing');
+}
+function endGrab() {
+  clearTimeout(holdTimer); holdTimer = null;
+  if (!grab) return;
+  grab = null; controls.enabled = true; canvas.classList.remove('grabbing');
+}
+canvas.addEventListener('pointerdown', e => {
+  down = { x: e.clientX, y: e.clientY, t: performance.now() }; flight = null; document.body.classList.add('used');
+  if (grab || !e.isPrimary) { endGrab(); return; }   // a second finger means zoom, not drag
+  const i = pick(e.clientX, e.clientY), em = state.emph;
+  if (i !== null && (!em || em.nodes.has(i) || em.near.has(i))) holdTimer = setTimeout(() => { holdTimer = null; startGrab(i, e); }, HOLD_MS);
+});
 canvas.addEventListener('pointerup', e => {
-  if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 8 || performance.now() - down.t > 600) return;
+  const held = grab !== null; endGrab();
+  if (held || !down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 8 || performance.now() - down.t > 600) return;
   tap(e.clientX, e.clientY);
 });
+canvas.addEventListener('pointercancel', endGrab);
 canvas.addEventListener('pointermove', e => {
+  if (grab) {
+    if (pointOnPlane(e, grab.plane, tmpB)) grab.target.copy(tmpB).add(grab.slip).sub(rest[grab.i]).clampLength(0, REACH);
+    return;
+  }
+  if (holdTimer && down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 8) { clearTimeout(holdTimer); holdTimer = null; }   // moved at once: this is a turn
   if (e.pointerType !== 'mouse') return;
   state.hovered = pick(e.clientX, e.clientY);
   canvas.classList.toggle('pick', state.hovered !== null);
@@ -683,6 +747,7 @@ function resize() {
 }
 addEventListener('resize', resize);
 
+let lastFrame = performance.now();
 function frame(now) {
   requestAnimationFrame(frame);
   if (mixing) {
@@ -690,7 +755,10 @@ function frame(now) {
     state.mix = mixing.from + (mixing.to - mixing.from) * ease(u);
     if (u === 1) mixing = null;
   }
-  if (mixing || !still || !placed) { placeNodes(now); moveFlecks(now); placed = true; }
+  let moving = false;   // physics in steps of at most 1/60 s, so a slow screen does not slow the springs down
+  for (let left = Math.min(0.1, (now - lastFrame) / 1000); left > 1e-4; left -= 1 / 60) moving = ripple(Math.min(left, 1 / 60));
+  lastFrame = now;
+  if (mixing || !still || !placed || moving) { placeNodes(now); moveFlecks(now); placed = true; }
   if (partyUntil) sparkle(now);
   if (flight) {
     const u = Math.min(1, (now - flight.start) / flight.ms), k = ease(u);
