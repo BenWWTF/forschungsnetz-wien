@@ -7,3 +7,6 @@ build/geocode.log
 design/index.html
 design/tokens.json
 build/tokens.mjs
+
+# Q. typefaces: licensed files, local only
+fonts/

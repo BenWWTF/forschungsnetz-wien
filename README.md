@@ -17,6 +17,10 @@ No build step for the site itself: plain HTML, CSS and ES modules, three.js vend
 The look follows the Q. brand. `design/tokens.css` holds the brand values as CSS variables; `style.css` assigns
 them to roles and `app.js` reads its colours from there.
 
+Typefaces: Clash Display and Clash Grotesk come from Fontshare. If a local `fonts/` folder exists (gitignored,
+see `fonts/fonts.css`), its files take precedence, so the page also works offline and sets copy text in
+PP Radio Grotesk. The font files are not in this repository because their licences do not allow public hosting.
+
 ## Hidden things
 
 Easter eggs sit next to their spheres and appear when a visitor opens that place (`EGGS` in `texts.js`: icon,
