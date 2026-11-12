@@ -1,89 +1,61 @@
 #!/usr/bin/env node
 /* Builds data/graph.json and data/wien.json.
 
-   node build/build.mjs            fetch the current Radar dataset, then build
+   node build/build.mjs            fetch the current numbers from the Radar's API, then build
    node build/build.mjs --cached   reuse build/cache/
 
-   The graph rule (who counts as collaborating) is not reimplemented here: the script runs
-   radar-collab.js from research.wwtf.at, so the numbers match the Radar's collaboration page. */
+   Who collaborates with whom is not worked out here: the numbers come from
+   research.wwtf.at/api/v1/collaboration.json, which the Radar writes with the same code as its
+   collaboration page. This script adds names, addresses and the two layouts. */
 import fs from 'node:fs';
 import path from 'node:path';
-import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(HERE);
-const CACHE = path.join(HERE, 'cache');
-const SOURCE = 'https://research.wwtf.at/';
-const FILES = ['research-data.csv', 'radar-collab.js', 'collab-umbrellas.json'];
-const SINCE = '2026-04-13';          // first complete week in the dataset, same cut as the Radar page
+const CACHE = path.join(HERE, 'cache', 'collaboration.json');
+const API = 'https://research.wwtf.at/api/v1/collaboration.json';
 const KM = 5;                        // scene units per kilometre in the city view
 const CENTRE = { lat: 48.2083, lon: 16.3731 };   // Stephansplatz
 const CITY_SCALE = 0.6;            // spheres shrink over the map, where they sit closer together
 const Q_SITE = { lat: 48.2083572, lon: 16.3776293 };   // Wollzeile 27a, where the exhibition stands (geocoded with Nominatim)
 const DOMAINS = ['Physical Sciences', 'Life Sciences', 'Health Sciences', 'Social Sciences'];
 
-fs.mkdirSync(CACHE, { recursive: true });
 if (!process.argv.includes('--cached')) {
-  for (const f of FILES) {
-    const r = await fetch(SOURCE + f);
-    if (!r.ok) throw new Error(`${f}: HTTP ${r.status}`);
-    fs.writeFileSync(path.join(CACHE, f), Buffer.from(await r.arrayBuffer()));
-  }
+  const r = await fetch(API);
+  if (!r.ok) throw new Error(`${API}: HTTP ${r.status}`);
+  fs.mkdirSync(path.dirname(CACHE), { recursive: true });
+  fs.writeFileSync(CACHE, Buffer.from(await r.arrayBuffer()));
 }
-const read = f => fs.readFileSync(path.join(CACHE, f), 'utf8');
-
-const sandbox = { window: {} };
-vm.runInNewContext(read('radar-collab.js'), sandbox);
-const RC = sandbox.window.RadarCollab;
-RC.setUmbrellas(JSON.parse(read('collab-umbrellas.json')));
-const papers = RC.parsePapers(read('research-data.csv')).filter(p => p.Date >= SINCE);
-const graph = RC.buildGraph(papers, true);
+const api = JSON.parse(fs.readFileSync(CACHE, 'utf8'));
 
 const meta = JSON.parse(fs.readFileSync(path.join(HERE, 'institutions.json'), 'utf8'));
 const coords = JSON.parse(fs.readFileSync(path.join(HERE, 'coords.json'), 'utf8'));
-const missing = graph.nodes.filter(n => !meta[n.id] || coords[n.id]?.lat == null).map(n => n.id);
+const missing = api.institutions.filter(n => !meta[n.id] || coords[n.id]?.lat == null).map(n => n.id);
 if (missing.length) throw new Error('No name or coordinates for: ' + missing.join(', ') + '. Add them to build/institutions.json and rerun build/geocode.py.');
 
-// topic mix per node: every output of the institution, not only the joint ones
-const domainsOf = Object.fromEntries(graph.nodes.map(n => [n.id, [0, 0, 0, 0]]));
-for (const p of papers) {
-  const d = DOMAINS.indexOf(p.Domain);
-  if (d < 0) continue;
-  for (const g of new Set((p._institutions || []).map(l => RC.groupOf(l, true)))) if (domainsOf[g]) domainsOf[g][d]++;
-}
-
-const maxCount = Math.max(...graph.nodes.map(n => n.count));
-const nodes = graph.nodes.sort((a, b) => b.count - a.count).map(n => ({
-  id: n.id, ...meta[n.id], addr: undefined, count: n.count, joint: n.joint, dom: domainsOf[n.id],
-  members: RC.labelsOfGroup(n.id, true, papers).filter(l => l !== n.id).sort(),
-  r: Math.max(1.3, 6.5 * Math.cbrt(n.count / maxCount)),   // volume, not radius, grows with the count
+const maxCount = Math.max(...api.institutions.map(n => n.outputs));
+const nodes = api.institutions.map(n => ({   // the API lists them largest first
+  id: n.id, ...meta[n.id], addr: undefined, count: n.outputs, joint: n.joint, dom: DOMAINS.map(d => n.domains[d]),
+  members: n.members,
+  r: Math.max(1.3, 6.5 * Math.cbrt(n.outputs / maxCount)),   // volume, not radius, grows with the count
 }));
 const index = Object.fromEntries(nodes.map((n, i) => [n.id, i]));
-const edges = graph.edges.map(e => ({ a: index[e.source], b: index[e.target], n: e.count })).sort((x, y) => y.n - x.n);
+const edges = api.pairs.map(p => ({ a: index[p.a], b: index[p.b], n: p.joint }));
 
 layoutNetwork(nodes, edges);
 layoutCity(nodes);
 
-const dates = papers.map(p => p.Date).sort();
-/* Publications in a typical week: the median of the weekly counts (weeks start on Monday). The median,
-   because the dataset has a few nearly empty weeks from collection gaps that would drag an average down. */
-const weekly = {};
-for (const p of papers) {
-  const d = new Date(p.Date + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7);
-  const monday = d.toISOString().slice(0, 10); weekly[monday] = (weekly[monday] || 0) + 1;
-}
-const counts = Object.values(weekly).sort((x, y) => x - y);
-const perWeek = Math.round(counts[counts.length >> 1] / 10) * 10;
 const round = v => Math.round(v * 100) / 100;
 fs.mkdirSync(path.join(ROOT, 'data'), { recursive: true });
 fs.writeFileSync(path.join(ROOT, 'data', 'graph.json'), JSON.stringify({
-  from: dates[0], to: dates.at(-1), total: graph.total, joint: graph.jointAll, perWeek, cityScale: CITY_SCALE,
+  from: api.from, to: api.to, total: api.outputs, joint: api.joint, perWeek: api.outputs_per_week, cityScale: CITY_SCALE,
   nodes: nodes.map(n => ({ ...n, r: round(n.r), net: n.net.map(round), city: n.city.map(round) })),
   edges,
 }));
-fs.writeFileSync(path.join(ROOT, 'data', 'wien.json'), JSON.stringify(buildMap()));
-console.log(`${nodes.length} institutions, ${edges.length} partnerships, ${graph.jointAll} of ${graph.total} outputs joint, ${dates[0]} to ${dates.at(-1)}`);
+// The map layers are not committed (see fetch-map.sh); without them the committed wien.json stays.
+if (fs.existsSync(path.join(HERE, 'bezirke.geojson'))) fs.writeFileSync(path.join(ROOT, 'data', 'wien.json'), JSON.stringify(buildMap()));
+console.log(`${nodes.length} institutions, ${edges.length} partnerships, ${api.joint} of ${api.outputs} outputs joint, ${api.from} to ${api.to}`);
 
 /* Force layout in three dimensions. Deterministic: it starts on a Fibonacci sphere, so the
    exhibit shows the same shape every day until the data changes. */

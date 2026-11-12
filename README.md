@@ -30,15 +30,20 @@ one then opens at the Q. on the city map.
 
 ## Updating the data
 
+The numbers come from the Radar's API, `https://research.wwtf.at/api/v1/collaboration.json`, which the Radar
+rewrites every Tuesday morning with the same code as its collaboration page. A GitHub Action
+(`.github/workflows/update-data.yml`) runs the build every day at 07:43 UTC and commits `data/graph.json` when
+the numbers changed, which redeploys the page. By hand:
+
 ```sh
-node build/build.mjs            # fetches the current dataset from research.wwtf.at
+node build/build.mjs            # fetches the current numbers from the API
 node build/build.mjs --cached   # rebuilds from build/cache/
 ```
 
-The script runs the Radar's own `radar-collab.js`, so the collaboration rule and the numbers match the Radar page.
-It writes `data/graph.json` (institutions, lines, both layouts) and `data/wien.json` (district outlines, waters).
+The script adds names, addresses and both layouts and writes `data/graph.json`; `data/wien.json` (district
+outlines, waters) is rewritten only when the map layers are present in `build/`.
 
-A new institution in the dataset needs an entry in `build/institutions.json` (full name, type, address), then
+A new institution in the dataset stops the build (the Action fails and GitHub sends a mail) until it has an entry in `build/institutions.json` (full name, type, address), then
 `python3 build/geocode.py` to refresh `build/coords.json`. The map layers come from the City of Vienna's WFS; `sh build/fetch-map.sh` downloads them into `build/` (they are not committed, and only change when the city redraws a district).
 
 ## Sources

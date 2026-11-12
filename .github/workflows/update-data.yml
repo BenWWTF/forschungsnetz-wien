@@ -1,0 +1,29 @@
+name: Update data
+
+# The Radar rewrites its API on Tuesdays around 08:10 Vienna time (07:10 UTC in winter, 06:10 in summer),
+# and now and then on other days after a manual merge. A daily run shortly afterwards picks up both;
+# it commits only when the numbers changed.
+on:
+  schedule:
+    - cron: '43 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node build/build.mjs
+      - name: Commit if the numbers changed
+        run: |
+          git diff --quiet data/graph.json && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Data: Radar dataset up to $(node -p "require('./data/graph.json').to")" data/graph.json
+          git push
