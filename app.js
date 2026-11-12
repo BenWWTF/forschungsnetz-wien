@@ -30,7 +30,14 @@ catch { fail('noWebgl'); }
 
 const lightColour = c => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b > 0.5;   // White and Lime spheres need black lettering
 let graph, wien;
-try { [graph, wien] = await Promise.all(['data/graph.json', 'data/wien.json'].map(u => fetch(u).then(r => r.ok ? r.json() : Promise.reject(new Error(u))))); }
+/* The numbers are rebuilt every day on GitHub Pages. A copy of this page on another server asks there
+   first, so it stays current without anyone copying files; without a connection, or after four seconds,
+   it shows the data/graph.json it was shipped with. */
+const LIVE = 'https://benwwtf.github.io/forschungsnetz-wien/';
+const json = (u, opt) => fetch(u, opt).then(r => r.ok ? r.json() : Promise.reject(new Error(u)));
+const current = location.href.startsWith(LIVE) ? Promise.reject()
+  : json(LIVE + 'data/graph.json', { signal: AbortSignal.timeout(4000) }).then(g => Array.isArray(g.nodes) && Array.isArray(g.edges) ? g : Promise.reject());
+try { [graph, wien] = await Promise.all([current.catch(() => json('data/graph.json')), json('data/wien.json')]); }
 catch { fail('noData'); }
 const nodes = graph.nodes, edges = graph.edges;
 nodes.forEach((n, i) => {
